@@ -1,8 +1,120 @@
-// ─── PLANO SCREENWRITING — v4 ────────────────────────────────────────────────
+// ─── PLANO SCREENWRITING — v5 ────────────────────────────────────────────────
 // Celtx-inspired · Mobile-first · Undo/Redo · Búsqueda · Modo foco
-// Índice de escenas · Notas · Auto-completar · Cronómetro · Revisión ortográfica
+// Índice de escenas · Notas · Auto-completar · Modo día/noche · Íconos SVG
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ÍCONOS SVG — integrados para mejor coherencia visual
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const Icons = {
+  Editor: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+    </svg>
+  ),
+  Scenes: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/>
+    </svg>
+  ),
+  Characters: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
+  Notes: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+    </svg>
+  ),
+  Stats: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+  ),
+  Search: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+    </svg>
+  ),
+  Projects: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+    </svg>
+  ),
+  Sun: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  ),
+  Moon: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  ),
+  Focus: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+    </svg>
+  ),
+  Undo: (props) => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+    </svg>
+  ),
+  Redo: (props) => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
+    </svg>
+  ),
+  Export: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+    </svg>
+  ),
+  PDF: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+    </svg>
+  ),
+  Fountain: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 19V5M5 12l7-7 7 7"/><path d="M8 16s1-1 4-1 4 1 4 1"/>
+    </svg>
+  ),
+  Pen: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+    </svg>
+  ),
+  Trash: (props) => (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>
+  ),
+  Back: (props) => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+  ),
+  Plus: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...props}>
+      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+    </svg>
+  ),
+  Close: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" {...props}>
+      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
+  Saving: (props) => (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+    </svg>
+  ),
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -22,7 +134,7 @@ const CHARACTER_PALETTE = [
   "#38BDF8","#FB923C","#E879F9","#4ADE80","#F472B6",
 ];
 
-const C = {
+const DARK = {
   bgApp:        "#12141A",
   bgSidebar:    "#0E1015",
   bgEditor:     "#181A22",
@@ -41,10 +153,39 @@ const C = {
   red:          "#F06060",
   textPrimary:  "#E4E8F0",
   textSec:      "#8A95B0",
-  textMuted:    "#454D6A",
+  textMuted:    "#5A6480",
   textFaint:    "#2D3250",
   white:        "#FFFFFF",
+  shadow:       "rgba(0,0,0,0.6)",
 };
+
+const LIGHT = {
+  bgApp:        "#F0F2F7",
+  bgSidebar:    "#E8EAF0",
+  bgEditor:     "#FAFBFD",
+  bgPanel:      "#EDF0F7",
+  bgCard:       "#FFFFFF",
+  bgCardHover:  "#F5F7FC",
+  bgActive:     "#EBF0FD",
+  border:       "#DDE1EC",
+  borderBright: "#C4CBDE",
+  accent:       "#4A7DE8",
+  accentGlow:   "rgba(74,125,232,0.12)",
+  accentWarm:   "#D4703A",
+  green:        "#27A870",
+  purple:       "#7C5CC4",
+  yellow:       "#D4A80E",
+  red:          "#D94F4F",
+  textPrimary:  "#1A1F2E",
+  textSec:      "#4A5270",
+  textMuted:    "#8A92A8",
+  textFaint:    "#C0C6D8",
+  white:        "#FFFFFF",
+  shadow:       "rgba(0,0,0,0.12)",
+};
+
+// C es un proxy mutable — se actualiza con setTheme
+let C = { ...DARK };
 
 function hexToRgb(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -162,7 +303,7 @@ function exportToFountain(blocks, projectName) {
 // ESTILOS GLOBALES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const GLOBAL_CSS = `
+function makeGlobalCss(C) { return `
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body,#root{height:100%;background:${C.bgApp};color:${C.textPrimary};font-family:'Inter',system-ui,sans-serif}
@@ -172,7 +313,7 @@ const GLOBAL_CSS = `
   textarea:focus,input:focus{outline:none}
   button{cursor:pointer;font-family:inherit}
   input{font-family:inherit}
-  mark{background:rgba(91,141,239,0.35);color:${C.white};border-radius:2px;padding:0 1px}
+  mark{background:rgba(91,141,239,0.35);color:${C.textPrimary};border-radius:2px;padding:0 1px}
   @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
   .fade-in{animation:fadeIn .15s ease}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
@@ -186,11 +327,11 @@ const GLOBAL_CSS = `
   .icon-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;
     border:none;background:none;color:${C.textMuted};font-size:9px;font-weight:600;
     letter-spacing:.5px;text-transform:uppercase;transition:color .15s,background .15s;
-    border-radius:6px;width:100%;cursor:pointer}
+    border-radius:8px;width:100%;cursor:pointer}
   .icon-nav-btn:hover{color:${C.textSec};background:${C.bgCard}}
   .icon-nav-btn.active{color:${C.accent};background:${C.accentGlow}}
   /* bottom nav mobile */
-  .mobile-nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  .mobile-nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     flex:1;padding:6px 2px 8px;border:none;background:none;cursor:pointer;transition:color .15s;
     font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
     color:${C.textMuted};min-height:52px}
@@ -199,15 +340,21 @@ const GLOBAL_CSS = `
   /* Tap highlight off on mobile */
   button{-webkit-tap-highlight-color:transparent}
   textarea{-webkit-tap-highlight-color:transparent}
-`;
+`; }
 
-function InjectStyles() {
+function InjectStyles({ theme }) {
   useEffect(() => {
     const el = document.createElement("style");
-    el.textContent = GLOBAL_CSS;
+    el.id = "plano-global-styles";
+    el.textContent = makeGlobalCss(C);
     document.head.appendChild(el);
     return () => document.head.removeChild(el);
   }, []);
+  // Update styles when theme changes
+  useEffect(() => {
+    const el = document.getElementById("plano-global-styles");
+    if (el) el.textContent = makeGlobalCss(C);
+  }, [theme]);
   return null;
 }
 
@@ -296,7 +443,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"16px 20px", borderBottom:`1px solid ${C.border}`}}>
           <span style={{fontWeight:700, fontSize:15, color:C.textPrimary}}>{title}</span>
-          <Btn onClick={onClose} style={{fontSize:18, padding:"2px 6px", color:C.textMuted}}>✕</Btn>
+          <Btn onClick={onClose} style={{padding:"5px 7px", color:C.textMuted}}><Icons.Close/></Btn>
         </div>
         <div style={{padding:20}}>{children}</div>
       </div>
@@ -308,36 +455,54 @@ function Modal({ open, onClose, title, children, width=420 }) {
 // NAV SIDEBAR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function NavSidebar({ tab, onTab, saving }) {
+function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme }) {
   const items = [
-    {id:"editor",   icon:"✍️",  label:"Editor"},
-    {id:"scenes",   icon:"🎬",  label:"Escenas"},
-    {id:"characters",icon:"👤", label:"Personajes"},
-    {id:"notes",    icon:"📝",  label:"Notas"},
-    {id:"stats",    icon:"📊",  label:"Stats"},
-    {id:"search",   icon:"🔍",  label:"Buscar"},
-    {id:"projects", icon:"📁",  label:"Guiones"},
+    {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
+    {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
+    {id:"characters",Icon:Icons.Characters, label:"Personas"},
+    {id:"notes",     Icon:Icons.Notes,      label:"Notas"},
+    {id:"stats",     Icon:Icons.Stats,      label:"Stats"},
+    {id:"search",    Icon:Icons.Search,     label:"Buscar"},
+    {id:"projects",  Icon:Icons.Projects,   label:"Guiones"},
   ];
   return (
     <div style={{
       width:64, background:C.bgSidebar, borderRight:`1px solid ${C.border}`,
       display:"flex", flexDirection:"column", alignItems:"center",
       padding:"12px 6px", gap:2, flexShrink:0, height:"100dvh",
+      transition:"background .25s,border-color .25s",
     }}>
-      <div style={{width:38, height:38, borderRadius:10, marginBottom:8, flexShrink:0,
-        background:`linear-gradient(135deg,${C.accent},#3B6CC5)`,
+      {/* Logo */}
+      <div style={{width:36, height:36, borderRadius:10, marginBottom:10, flexShrink:0,
+        background:`linear-gradient(135deg,${C.accent},${isDark?"#3B6CC5":"#2A5AC0"})`,
         display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:18, fontWeight:900, color:C.white, letterSpacing:-1}}>P</div>
+        fontSize:16, fontWeight:900, color:"#fff", letterSpacing:-1,
+        boxShadow:`0 4px 12px rgba(91,141,239,0.35)`}}>P</div>
+
       {items.map(it => (
         <button key={it.id} className={`icon-nav-btn${tab===it.id?" active":""}`}
           onClick={() => onTab(it.id)} title={it.label}>
-          <span style={{fontSize:18}}>{it.icon}</span>
-          {it.label}
+          <it.Icon/>
+          <span style={{fontSize:8.5}}>{it.label}</span>
         </button>
       ))}
+
       <div style={{flex:1}}/>
-      {saving && <div className="saving" style={{fontSize:9, color:C.textMuted, textAlign:"center", letterSpacing:.5}}>
-        Guardando
+
+      {/* Theme toggle */}
+      <button onClick={onToggleTheme} title={isDark ? "Modo día" : "Modo noche"}
+        style={{padding:"8px", borderRadius:8, border:"none", background:"none",
+          color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
+          display:"flex", alignItems:"center", justifyContent:"center", width:"100%"}}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.textSec;e.currentTarget.style.background=C.bgCard}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
+        {isDark ? <Icons.Sun/> : <Icons.Moon/>}
+      </button>
+
+      {saving && <div className="saving" style={{
+        display:"flex", alignItems:"center", justifyContent:"center",
+        padding:"4px 0", color:C.textMuted}}>
+        <Icons.Saving/>
       </div>}
     </div>
   );
@@ -347,13 +512,13 @@ function NavSidebar({ tab, onTab, saving }) {
 // BOTTOM NAV — MOBILE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function MobileBottomNav({ tab, onTab, saving }) {
+function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme }) {
   const items = [
-    {id:"editor",    icon:"✍️",  label:"Editor"},
-    {id:"scenes",    icon:"🎬",  label:"Escenas"},
-    {id:"characters",icon:"👤",  label:"Personas"},
-    {id:"notes",     icon:"📝",  label:"Notas"},
-    {id:"projects",  icon:"📁",  label:"Guiones"},
+    {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
+    {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
+    {id:"characters",Icon:Icons.Characters, label:"Personas"},
+    {id:"notes",     Icon:Icons.Notes,      label:"Notas"},
+    {id:"projects",  Icon:Icons.Projects,   label:"Guiones"},
   ];
   return (
     <div style={{
@@ -365,10 +530,14 @@ function MobileBottomNav({ tab, onTab, saving }) {
       {items.map(it => (
         <button key={it.id} className={`mobile-nav-btn${tab===it.id?" active":""}`}
           onClick={() => onTab(it.id)}>
-          <span style={{fontSize:20}}>{it.icon}</span>
-          {it.label}
+          <it.Icon style={{width:20,height:20}}/>
+          <span style={{fontSize:8.5}}>{it.label}</span>
         </button>
       ))}
+      <button onClick={onToggleTheme} className="mobile-nav-btn" title={isDark?"Modo día":"Modo noche"}>
+        {isDark ? <Icons.Sun style={{width:20,height:20}}/> : <Icons.Moon style={{width:20,height:20}}/>}
+        <span style={{fontSize:8.5}}>{isDark?"Día":"Noche"}</span>
+      </button>
     </div>
   );
 }
@@ -438,7 +607,9 @@ function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject,
         paddingTop:"calc(14px + env(safe-area-inset-top, 0px))",
       }}>
         <button onClick={onBack} style={{background:"none",border:"none",
-          color:C.textSec,fontSize:22,cursor:"pointer",padding:"2px 4px",lineHeight:1}}>‹</button>
+          color:C.textSec,cursor:"pointer",padding:"2px 4px",lineHeight:1,display:"flex",alignItems:"center"}}>
+          <Icons.Back/>
+        </button>
         <span style={{fontWeight:700, color:C.textPrimary, fontSize:16}}>{panelTitle}</span>
       </div>
 
@@ -506,7 +677,7 @@ function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete, onRena
             padding:"8px 10px", color:C.textSec, fontSize:13, outline:"none"}}
           onFocus={e=>e.target.style.borderColor=C.accent}
           onBlur={e=>e.target.style.borderColor=C.border}/>
-        <Btn onClick={onNew} variant="primary" style={{padding:"8px 12px", fontSize:18, borderRadius:8}}>+</Btn>
+        <Btn onClick={onNew} variant="primary" style={{padding:"7px 10px", borderRadius:8}}><Icons.Plus/></Btn>
       </div>
       {filtered.map(p => (
         <ProjectItem key={p.id} project={p} isActive={p.id===selectedId}
@@ -528,7 +699,7 @@ function ProjectItem({ project, isActive, onSelect, onDelete, onRename }) {
         background:isActive?C.bgActive:hover?C.bgCard:"transparent",
         border:isActive?`1px solid ${C.borderBright}`:"1px solid transparent",
         transition:"all .12s", display:"flex", alignItems:"center", gap:8}}>
-      <span style={{fontSize:18, flexShrink:0}}>🎬</span>
+      <Icons.Projects style={{width:18,height:18,flexShrink:0,color:isActive?C.accent:C.textMuted}}/>
       {editing ? (
         <input autoFocus value={name} onChange={e=>setName(e.target.value)}
           onBlur={commit} onClick={e=>e.stopPropagation()}
@@ -543,8 +714,8 @@ function ProjectItem({ project, isActive, onSelect, onDelete, onRename }) {
       )}
       {(hover||isActive) && !editing && (
         <div style={{display:"flex", gap:2}} onClick={e=>e.stopPropagation()}>
-          <Btn onClick={()=>setEditing(true)} style={{padding:"3px 5px", fontSize:12}}>✏️</Btn>
-          <Btn onClick={onDelete} style={{padding:"3px 5px", fontSize:12}}>🗑</Btn>
+          <Btn onClick={()=>setEditing(true)} style={{padding:"4px 6px"}} title="Renombrar"><Icons.Pen/></Btn>
+          <Btn onClick={onDelete} style={{padding:"4px 6px"}} title="Eliminar"><Icons.Trash/></Btn>
         </div>
       )}
     </div>
@@ -558,7 +729,7 @@ function ScenesPanel({ scenes, onSceneClick }) {
         fontWeight:700, marginBottom:10}}>{scenes.length} escenas</p>
       {scenes.length===0 && (
         <div style={{textAlign:"center", padding:"32px 16px", color:C.textMuted}}>
-          <div style={{fontSize:28, marginBottom:8}}>🎬</div>
+          <div style={{marginBottom:10, color:C.textMuted}}><Icons.Scenes style={{width:28,height:28}}/></div>
           <p style={{fontSize:13}}>Escribí INT. o EXT. para crear una escena.</p>
         </div>
       )}
@@ -593,7 +764,7 @@ function CharactersPanel({ characters }) {
         fontWeight:700, marginBottom:10}}>{entries.length} personajes</p>
       {entries.length===0 && (
         <div style={{textAlign:"center", padding:"32px 16px", color:C.textMuted}}>
-          <div style={{fontSize:28, marginBottom:8}}>👤</div>
+          <div style={{marginBottom:10, color:C.textMuted}}><Icons.Characters style={{width:28,height:28}}/></div>
           <p style={{fontSize:13}}>Los personajes aparecen al escribir diálogos.</p>
         </div>
       )}
@@ -790,34 +961,34 @@ function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, project
       <div style={{flex:1}}/>
 
       {/* Saving indicator */}
-      {saving && <span className="saving" style={{fontSize:10, color:C.textMuted, marginRight:4}}>Guardando…</span>}
+      {saving && <span className="saving" style={{display:"flex",alignItems:"center",gap:4,fontSize:10, color:C.textMuted, marginRight:4}}><Icons.Saving/> Guardando</span>}
 
-      <Btn onClick={onUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)" style={{padding:"4px 7px", fontSize:14}}>↩</Btn>
-      <Btn onClick={onRedo} disabled={!canRedo} title="Rehacer (Ctrl+Y)" style={{padding:"4px 7px", fontSize:14}}>↪</Btn>
+      <Btn onClick={onUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)" style={{padding:"5px 7px"}}><Icons.Undo/></Btn>
+      <Btn onClick={onRedo} disabled={!canRedo} title="Rehacer (Ctrl+Y)" style={{padding:"5px 7px"}}><Icons.Redo/></Btn>
 
       <Btn onClick={onFocusMode} title="Modo foco"
-        style={{padding:"4px 7px", fontSize:14, color:focusMode?C.accent:C.textMuted}}>⊙</Btn>
+        style={{padding:"5px 7px", color:focusMode?C.accent:C.textMuted}}><Icons.Focus/></Btn>
 
       <div style={{position:"relative"}}>
         <Btn onClick={()=>setShowExport(v=>!v)} variant="outline"
-          style={{gap:4, padding:"4px 10px", fontSize:12}}>
-          ↓ Exportar
+          style={{gap:5, padding:"4px 10px", fontSize:12}}>
+          <Icons.Export/> Exportar
         </Btn>
         {showExport && (
           <div style={{position:"absolute", right:0, top:"calc(100% + 6px)", background:C.bgPanel,
             border:`1px solid ${C.borderBright}`, borderRadius:9, padding:6,
-            zIndex:300, minWidth:170, boxShadow:"0 12px 32px rgba(0,0,0,.5)"}}>
+            zIndex:300, minWidth:180, boxShadow:`0 12px 32px ${C.shadow}`}}>
             {[
-              {label:"📄 PDF (impresión)", fn:()=>{onExport();setShowExport(false);}},
-              {label:"✏️ Fountain (.fountain)", fn:()=>{onExportFountain();setShowExport(false);}},
+              {label:"PDF (impresión)", Icon:Icons.PDF, fn:()=>{onExport();setShowExport(false);}},
+              {label:"Fountain (.fountain)", Icon:Icons.Fountain, fn:()=>{onExportFountain();setShowExport(false);}},
             ].map(item => (
               <button key={item.label} onClick={item.fn} style={{
-                display:"block", width:"100%", padding:"8px 12px", background:"none", border:"none",
-                color:C.textSec, fontSize:12, textAlign:"left", cursor:"pointer",
-                borderRadius:6, fontFamily:"inherit"}}
+                display:"flex", alignItems:"center", gap:8, width:"100%", padding:"9px 12px",
+                background:"none", border:"none", color:C.textSec, fontSize:12,
+                textAlign:"left", cursor:"pointer", borderRadius:6, fontFamily:"inherit"}}
                 onMouseEnter={e=>e.currentTarget.style.background=C.bgCard}
                 onMouseLeave={e=>e.currentTarget.style.background="none"}>
-                {item.label}
+                <item.Icon/>{item.label}
               </button>
             ))}
           </div>
@@ -859,28 +1030,32 @@ function MobileEditorHeader({ projectName, words, pages, scenes, saving,
             {saving && <span className="saving" style={{marginLeft:6}}>· Guardando…</span>}
           </div>
         </div>
-        <Btn onClick={onUndo} disabled={!canUndo} style={{padding:"6px 8px", fontSize:16}}>↩</Btn>
-        <Btn onClick={onRedo} disabled={!canRedo} style={{padding:"6px 8px", fontSize:16}}>↪</Btn>
+        <Btn onClick={onUndo} disabled={!canUndo} style={{padding:"6px 8px"}}><Icons.Undo/></Btn>
+        <Btn onClick={onRedo} disabled={!canRedo} style={{padding:"6px 8px"}}><Icons.Redo/></Btn>
         <button onClick={onFocusMode} style={{background:"none",border:"none",
-          color:focusMode?C.accent:C.textMuted,fontSize:18,cursor:"pointer",padding:"4px 6px"}}>⊙</button>
+          color:focusMode?C.accent:C.textMuted,cursor:"pointer",padding:"4px 6px",display:"flex",alignItems:"center"}}>
+          <Icons.Focus/>
+        </button>
         <div style={{position:"relative"}}>
           <button onClick={()=>setShowExport(v=>!v)} style={{background:"none",border:`1px solid ${C.borderBright}`,
-            borderRadius:7,color:C.textSec,fontSize:12,cursor:"pointer",padding:"6px 10px",fontWeight:600}}>↓</button>
+            borderRadius:7,color:C.textSec,cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center"}}>
+            <Icons.Export/>
+          </button>
           {showExport && (
             <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:C.bgPanel,
               border:`1px solid ${C.borderBright}`,borderRadius:9,padding:6,
-              zIndex:300,minWidth:180,boxShadow:"0 12px 32px rgba(0,0,0,.7)"}}>
+              zIndex:300,minWidth:180,boxShadow:`0 12px 32px ${C.shadow}`}}>
               {[
-                {label:"📄 PDF",fn:()=>{onExport();setShowExport(false);}},
-                {label:"✏️ Fountain",fn:()=>{onExportFountain();setShowExport(false);}},
+                {label:"PDF",Icon:Icons.PDF,fn:()=>{onExport();setShowExport(false);}},
+                {label:"Fountain",Icon:Icons.Fountain,fn:()=>{onExportFountain();setShowExport(false);}},
               ].map(item=>(
                 <button key={item.label} onClick={item.fn} style={{
-                  display:"block",width:"100%",padding:"10px 14px",background:"none",border:"none",
-                  color:C.textSec,fontSize:13,textAlign:"left",cursor:"pointer",
-                  borderRadius:6,fontFamily:"inherit"}}
+                  display:"flex",alignItems:"center",gap:8,width:"100%",padding:"10px 14px",
+                  background:"none",border:"none",color:C.textSec,fontSize:13,
+                  textAlign:"left",cursor:"pointer",borderRadius:6,fontFamily:"inherit"}}
                   onMouseEnter={e=>e.currentTarget.style.background=C.bgCard}
                   onMouseLeave={e=>e.currentTarget.style.background="none"}>
-                  {item.label}
+                  <item.Icon/>{item.label}
                 </button>
               ))}
             </div>
@@ -1024,9 +1199,9 @@ function ScriptBlock({ block, index, isActive, characterColors, onUpdate, onFocu
           {block.text==="" && (
             <button onClick={e=>{e.stopPropagation();onDeleteBlock(index);}}
               style={{background:"none",border:`1px solid rgba(240,96,96,.25)`,
-                borderRadius:5,padding:"2px 8px",fontSize:10,color:C.red,
-                cursor:"pointer",fontFamily:"inherit"}}>
-              ✕
+                borderRadius:5,padding:"3px 7px",color:C.red,
+                cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center"}}>
+              <Icons.Close style={{width:10,height:10}}/>
             </button>
           )}
         </div>
@@ -1084,7 +1259,18 @@ export default function App() {
     setProjects(prev => prev.map(p => p.id===selectedId ? {...p, blocks:nb} : p));
   }, [selectedId, setBlocksRaw]);
 
-  // ── UI state ───────────────────────────────────────────────────────────────
+  // ── Tema día/noche ─────────────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState(() => {
+    try { return localStorage.getItem("plano-theme") !== "light"; } catch { return true; }
+  });
+
+  useEffect(() => {
+    const theme = isDark ? DARK : LIGHT;
+    Object.assign(C, theme);
+    try { localStorage.setItem("plano-theme", isDark ? "dark" : "light"); } catch {}
+  }, [isDark]);
+
+  const toggleTheme = useCallback(() => setIsDark(v => !v), []);
   const [activeIndex, setActiveIndex] = useState(0);
   const [navTab, setNavTab] = useState("editor");  // desktop left nav
   const [mobileTab, setMobileTab] = useState("editor"); // mobile bottom nav
@@ -1330,15 +1516,15 @@ export default function App() {
 
   return (
     <>
-      <InjectStyles/>
-      <div style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp}}>
+      <InjectStyles theme={isDark?"dark":"light"}/>
+      <div key={isDark?"dark":"light"} style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .25s, color .25s"}}>
 
         {/* ── DESKTOP ── */}
         {!isMobile && (
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme}/>
             )}
 
             {/* Center column */}
@@ -1377,7 +1563,7 @@ export default function App() {
               {focusMode && (
                 <div style={{position:"fixed", top:14, right:14, zIndex:500}}>
                   <Btn onClick={()=>setFocusMode(false)} variant="outline"
-                    style={{fontSize:11, padding:"5px 12px"}}>Salir del foco ✕</Btn>
+                    style={{fontSize:11, padding:"5px 12px", gap:6}}><Icons.Close style={{width:11,height:11}}/>Salir del foco</Btn>
                 </div>
               )}
 
@@ -1413,7 +1599,7 @@ export default function App() {
             {focusMode && (
               <div style={{position:"fixed", top:14, right:14, zIndex:500}}>
                 <Btn onClick={()=>setFocusMode(false)} variant="outline"
-                  style={{fontSize:12, padding:"6px 14px"}}>Salir ✕</Btn>
+                  style={{fontSize:12, padding:"6px 14px", gap:6}}><Icons.Close style={{width:11,height:11}}/>Salir</Btn>
               </div>
             )}
 
@@ -1434,7 +1620,7 @@ export default function App() {
                 if (t==="editor") {
                   setTimeout(()=>inputRefs.current[activeIndex]?.focus(), 100);
                 }
-              }} saving={saving}/>
+              }} saving={saving} isDark={isDark} onToggleTheme={toggleTheme}/>
             )}
           </div>
         )}
