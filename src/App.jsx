@@ -472,12 +472,37 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme }) {
       padding:"12px 6px", gap:2, flexShrink:0, height:"100dvh",
       transition:"background .25s,border-color .25s",
     }}>
-      {/* Logo */}
-      <div style={{width:36, height:36, borderRadius:10, marginBottom:10, flexShrink:0,
-        background:`linear-gradient(135deg,${C.accent},${isDark?"#3B6CC5":"#2A5AC0"})`,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:16, fontWeight:900, color:"#fff", letterSpacing:-1,
-        boxShadow:`0 4px 12px rgba(91,141,239,0.35)`}}>P</div>
+      {/* Logo — tira de película + cursor */}
+      <div style={{marginBottom:8, flexShrink:0, cursor:"default"}} title="PLANO Screenwriting">
+        <svg width="52" height="40" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {/* Fondo */}
+          <rect width="52" height="40" rx="7"
+            fill={isDark ? "#0E1015" : "#E8EAF0"}
+            stroke={isDark ? "#252840" : "#C4CBDE"} strokeWidth="0.75"/>
+          {/* Perforaciones izquierda */}
+          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          {/* Perforaciones derecha */}
+          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          {/* Texto PLANO */}
+          <text x="26" y="24"
+            fontFamily="'Courier Prime','Courier New',monospace"
+            fontSize="13" fontWeight="700"
+            fill={isDark ? "#E4E8F0" : "#1A1F2E"}
+            textAnchor="middle" letterSpacing="2">PLANO</text>
+          {/* Línea de cursor */}
+          <rect x="10" y="28" width="30" height="1.5" rx="0.75"
+            fill={isDark ? "#5B8DEF" : "#4A7DE8"} opacity="0.9"/>
+          {/* Cursor parpadeante */}
+          <rect x="38.5" y="14" width="2" height="14" rx="1"
+            fill={isDark ? "#5B8DEF" : "#4A7DE8"}>
+            <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
+          </rect>
+        </svg>
+      </div>
 
       {items.map(it => (
         <button key={it.id} className={`icon-nav-btn${tab===it.id?" active":""}`}
@@ -1021,6 +1046,22 @@ function MobileEditorHeader({ projectName, words, pages, scenes, saving,
 
       {/* Top row: project name + actions */}
       <div style={{display:"flex", alignItems:"center", padding:"10px 14px 6px", gap:8}}>
+        {/* Logo mini móvil */}
+        <svg width="32" height="25" viewBox="0 0 52 40" fill="none" style={{flexShrink:0}}>
+          <rect width="52" height="40" rx="7" fill={C.bgSidebar} stroke={C.border} strokeWidth="0.75"/>
+          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace"
+            fontSize="13" fontWeight="700" fill={C.textPrimary} textAnchor="middle" letterSpacing="2">PLANO</text>
+          <rect x="10" y="28" width="30" height="1.5" rx="0.75" fill={C.accent} opacity="0.9"/>
+          <rect x="38.5" y="14" width="2" height="14" rx="1" fill={C.accent}>
+            <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
+          </rect>
+        </svg>
         <div style={{flex:1, minWidth:0}}>
           <div style={{fontSize:14, fontWeight:700, color:C.accent,
             fontFamily:"'Courier Prime',monospace", overflow:"hidden",
