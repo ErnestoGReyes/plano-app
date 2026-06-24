@@ -1,8 +1,21 @@
-// ─── PLANO SCREENWRITING — v5 ────────────────────────────────────────────────
+// ─── PLANO SCREENWRITING — v6 ────────────────────────────────────────────────
 // Celtx-inspired · Mobile-first · Undo/Redo · Búsqueda · Modo foco
-// Índice de escenas · Notas · Auto-completar · Modo día/noche · Íconos SVG
+// Índice de escenas · Notas · Auto-completar · Modo día/noche · Auth Supabase
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPABASE — configuración
+// Crear un archivo .env en la raíz del proyecto con:
+//   VITE_SUPABASE_URL=https://xxxx.supabase.co
+//   VITE_SUPABASE_ANON_KEY=eyJ...
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ÍCONOS SVG — integrados para mejor coherencia visual
@@ -476,7 +489,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
 // NAV SIDEBAR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme }) {
+function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
@@ -543,6 +556,24 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme }) {
         onMouseEnter={e=>{e.currentTarget.style.color=C.textSec;e.currentTarget.style.background=C.bgCard}}
         onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
         {isDark ? <Icons.Sun/> : <Icons.Moon/>}
+      </button>
+
+      {/* User avatar + sign out */}
+      <button onClick={onSignOut} title={`Cerrar sesión (${userEmail})`}
+        style={{padding:"7px", borderRadius:8, border:"none", background:"none",
+          cursor:"pointer", transition:"background .15s", width:"100%",
+          display:"flex", alignItems:"center", justifyContent:"center"}}
+        onMouseEnter={e=>e.currentTarget.style.background="rgba(240,96,96,.1)"}
+        onMouseLeave={e=>e.currentTarget.style.background="none"}>
+        <div style={{
+          width:26, height:26, borderRadius:"50%",
+          background:`rgba(${hexToRgb(C.accent)},.18)`,
+          border:`1px solid rgba(${hexToRgb(C.accent)},.3)`,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          fontSize:10, fontWeight:700, color:C.accent, letterSpacing:0,
+        }}>
+          {(userEmail||"?")[0].toUpperCase()}
+        </div>
       </button>
 
       {saving && <div className="saving" style={{
@@ -1273,8 +1304,210 @@ function ScriptBlock({ block, index, isActive, characterColors, onUpdate, onFocu
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DATOS POR DEFECTO
+// HOOK: SESIÓN DE USUARIO
 // ═══════════════════════════════════════════════════════════════════════════════
+
+function useAuth() {
+  const [session, setSession] = useState(undefined); // undefined = cargando
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => subscription.unsubscribe();
+  }, []);
+  return session;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PANTALLA DE AUTENTICACIÓN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function AuthScreen({ isDark, onToggleTheme }) {
+  const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const reset = () => { setError(""); setSuccess(""); };
+
+  const handleSubmit = async () => {
+    if (!email.trim() || (!password.trim() && mode !== "forgot")) return;
+    setLoading(true); reset();
+    try {
+      if (mode === "login") {
+        const { error: e } = await supabase.auth.signInWithPassword({ email, password });
+        if (e) setError(e.message);
+      } else if (mode === "register") {
+        const { error: e } = await supabase.auth.signUp({ email, password });
+        if (e) setError(e.message);
+        else setSuccess("Revisá tu email para confirmar la cuenta.");
+      } else {
+        const { error: e } = await supabase.auth.resetPasswordForEmail(email);
+        if (e) setError(e.message);
+        else setSuccess("Te enviamos un link para restablecer tu contraseña.");
+      }
+    } finally { setLoading(false); }
+  };
+
+  const inputStyle = {
+    width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
+    borderRadius:10, padding:"13px 16px", color:C.textPrimary, fontSize:15,
+    outline:"none", transition:"border-color .15s", fontFamily:"inherit",
+    boxSizing:"border-box",
+  };
+
+  return (
+    <div style={{
+      minHeight:"100dvh", display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      background:C.bgApp, padding:"24px 16px",
+    }}>
+      {/* Theme toggle top-right */}
+      <button onClick={onToggleTheme} title={isDark?"Modo día":"Modo noche"}
+        style={{position:"fixed", top:16, right:16, background:"none", border:"none",
+          color:C.textMuted, cursor:"pointer", padding:8, borderRadius:8,
+          display:"flex", alignItems:"center"}}
+        onMouseEnter={e=>e.currentTarget.style.color=C.textSec}
+        onMouseLeave={e=>e.currentTarget.style.color=C.textMuted}>
+        {isDark ? <Icons.Sun/> : <Icons.Moon/>}
+      </button>
+
+      {/* Logo */}
+      <div style={{marginBottom:32}}>
+        <svg width="80" height="62" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="52" height="40" rx="7"
+            fill={isDark ? "#0E1015" : "#E8EAF0"}
+            stroke={isDark ? "#252840" : "#C4CBDE"} strokeWidth="0.75"/>
+          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace"
+            fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"}
+            textAnchor="middle" letterSpacing="2">PLANO</text>
+          <rect x="10" y="28" width="30" height="1.5" rx="0.75"
+            fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
+          <rect x="38.5" y="14" width="2" height="14" rx="1" fill={isDark?"#5B8DEF":"#4A7DE8"}>
+            <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
+          </rect>
+        </svg>
+      </div>
+
+      {/* Card */}
+      <div style={{
+        width:"100%", maxWidth:400,
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:16, padding:"32px 28px",
+        boxShadow:`0 24px 60px ${C.shadow}`,
+      }}>
+        <h1 style={{
+          fontFamily:"'Courier Prime',monospace", fontSize:22, fontWeight:700,
+          color:C.textPrimary, margin:"0 0 4px", letterSpacing:-.3,
+        }}>
+          {mode==="login" ? "Bienvenido" : mode==="register" ? "Crear cuenta" : "Restablecer contraseña"}
+        </h1>
+        <p style={{fontSize:13, color:C.textMuted, margin:"0 0 28px"}}>
+          {mode==="login" ? "Ingresá a tu cuenta de Plano." :
+           mode==="register" ? "Tus guiones guardados en la nube." :
+           "Te enviamos un link a tu email."}
+        </p>
+
+        <div style={{display:"flex", flexDirection:"column", gap:12}}>
+          <input
+            type="email" value={email} onChange={e=>{setEmail(e.target.value);reset();}}
+            placeholder="tu@email.com" autoComplete="email"
+            style={inputStyle}
+            onFocus={e=>e.target.style.borderColor=C.accent}
+            onBlur={e=>e.target.style.borderColor=C.borderBright}
+            onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
+          />
+          {mode !== "forgot" && (
+            <input
+              type="password" value={password} onChange={e=>{setPassword(e.target.value);reset();}}
+              placeholder="Contraseña" autoComplete={mode==="register"?"new-password":"current-password"}
+              style={inputStyle}
+              onFocus={e=>e.target.style.borderColor=C.accent}
+              onBlur={e=>e.target.style.borderColor=C.borderBright}
+              onKeyDown={e=>e.key==="Enter"&&handleSubmit()}
+            />
+          )}
+
+          {error && (
+            <p style={{fontSize:12, color:C.red, margin:0, padding:"10px 14px",
+              background:`rgba(240,96,96,.08)`, borderRadius:8,
+              border:`1px solid rgba(240,96,96,.2)`}}>{error}</p>
+          )}
+          {success && (
+            <p style={{fontSize:12, color:C.green, margin:0, padding:"10px 14px",
+              background:`rgba(63,202,140,.08)`, borderRadius:8,
+              border:`1px solid rgba(63,202,140,.2)`}}>{success}</p>
+          )}
+
+          <button onClick={handleSubmit} disabled={loading}
+            style={{
+              width:"100%", padding:"13px", borderRadius:10, border:"none",
+              background:C.accent, color:"#fff", fontSize:15, fontWeight:600,
+              cursor:loading?"wait":"pointer", transition:"opacity .15s",
+              opacity:loading?.65:1, fontFamily:"inherit", marginTop:4,
+            }}>
+            {loading ? "Un momento..." :
+             mode==="login" ? "Entrar" :
+             mode==="register" ? "Crear cuenta" : "Enviar link"}
+          </button>
+        </div>
+
+        {/* Links inferiores */}
+        <div style={{marginTop:22, display:"flex", flexDirection:"column", gap:8, alignItems:"center"}}>
+          {mode==="login" && (<>
+            <button onClick={()=>{setMode("forgot");reset();}} style={{
+              background:"none", border:"none", color:C.textMuted, fontSize:12,
+              cursor:"pointer", padding:0, fontFamily:"inherit"}}
+              onMouseEnter={e=>e.currentTarget.style.color=C.textSec}
+              onMouseLeave={e=>e.currentTarget.style.color=C.textMuted}>
+              ¿Olvidaste tu contraseña?
+            </button>
+            <p style={{fontSize:13, color:C.textMuted, margin:0}}>
+              ¿No tenés cuenta?{" "}
+              <button onClick={()=>{setMode("register");reset();}} style={{
+                background:"none", border:"none", color:C.accent, fontSize:13,
+                cursor:"pointer", padding:0, fontWeight:600, fontFamily:"inherit"}}>
+                Registrate
+              </button>
+            </p>
+          </>)}
+          {mode==="register" && (
+            <p style={{fontSize:13, color:C.textMuted, margin:0}}>
+              ¿Ya tenés cuenta?{" "}
+              <button onClick={()=>{setMode("login");reset();}} style={{
+                background:"none", border:"none", color:C.accent, fontSize:13,
+                cursor:"pointer", padding:0, fontWeight:600, fontFamily:"inherit"}}>
+                Iniciá sesión
+              </button>
+            </p>
+          )}
+          {mode==="forgot" && (
+            <button onClick={()=>{setMode("login");reset();}} style={{
+              background:"none", border:"none", color:C.textMuted, fontSize:12,
+              cursor:"pointer", padding:0, fontFamily:"inherit"}}
+              onMouseEnter={e=>e.currentTarget.style.color=C.textSec}
+              onMouseLeave={e=>e.currentTarget.style.color=C.textMuted}>
+              ← Volver al login
+            </button>
+          )}
+        </div>
+      </div>
+
+      <p style={{marginTop:20, fontSize:11, color:C.textFaint, textAlign:"center"}}>
+        Plano Screenwriting · tus guiones siempre disponibles
+      </p>
+    </div>
+  );
+}
+
+
 
 const DEFAULT_PROJECT = () => ({
   id: uid(), name: "Mi Primer Guion", createdAt: Date.now(),
@@ -1297,13 +1530,77 @@ const DEFAULT_PROJECT = () => ({
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export default function App() {
-  // ── Proyectos ──────────────────────────────────────────────────────────────
-  const [projects, setProjects] = useState(() => {
-    try { const s=localStorage.getItem("plano-v4"); if(s) return JSON.parse(s); } catch{}
-    return [DEFAULT_PROJECT()];
+  const session = useAuth();
+
+  // ── Tema día/noche ─────────────────────────────────────────────────────────
+  const [isDark, setIsDark] = useState(() => {
+    try { return localStorage.getItem("plano-theme") !== "light"; } catch { return true; }
   });
-  const [selectedId, setSelectedId] = useState(() => projects[0]?.id);
+  useEffect(() => {
+    Object.assign(C, isDark ? DARK : LIGHT);
+    try { localStorage.setItem("plano-theme", isDark ? "dark" : "light"); } catch {}
+  }, [isDark]);
+  const toggleTheme = useCallback(() => setIsDark(v => !v), []);
+
+  // ── Cargando sesión ────────────────────────────────────────────────────────
+  if (session === undefined) {
+    return (
+      <div style={{minHeight:"100dvh", display:"flex", alignItems:"center",
+        justifyContent:"center", background:C.bgApp}}>
+        <div style={{color:C.textMuted, fontSize:13, fontFamily:"'Courier Prime',monospace",
+          letterSpacing:2}}>PLANO</div>
+      </div>
+    );
+  }
+
+  // ── Sin sesión → pantalla de login ────────────────────────────────────────
+  if (!session) {
+    return (
+      <>
+        <InjectStyles theme={isDark?"dark":"light"}/>
+        <AuthScreen isDark={isDark} onToggleTheme={toggleTheme}/>
+      </>
+    );
+  }
+
+  // ── Con sesión → app completa ──────────────────────────────────────────────
+  return <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}/>;
+}
+
+function PlanoApp({ session, isDark, toggleTheme }) {
+  // ── Proyectos ──────────────────────────────────────────────────────────────
+  const [projects, setProjects] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [selectedId, setSelectedId] = useState(null);
   const project = projects.find(p=>p.id===selectedId) || projects[0];
+
+  // Cargar guiones del usuario desde Supabase
+  useEffect(() => {
+    async function load() {
+      setLoadingProjects(true);
+      const { data, error } = await supabase
+        .from("scripts")
+        .select("id, name, blocks, updated_at")
+        .order("updated_at", { ascending: false });
+      if (!error && data) {
+        if (data.length === 0) {
+          // Primer uso: crear guion de ejemplo
+          const def = DEFAULT_PROJECT();
+          const { data: created } = await supabase
+            .from("scripts")
+            .insert({ name: def.name, blocks: def.blocks })
+            .select()
+            .single();
+          if (created) { setProjects([created]); setSelectedId(created.id); }
+        } else {
+          setProjects(data);
+          setSelectedId(data[0].id);
+        }
+      }
+      setLoadingProjects(false);
+    }
+    load();
+  }, []);
 
   // ── Bloques con undo/redo ──────────────────────────────────────────────────
   const [blocks, setBlocksRaw, undo, redo, canUndo, canRedo] = useUndoable(project?.blocks||[]);
@@ -1316,27 +1613,36 @@ export default function App() {
     }
   }, [selectedId]);
 
+  const saveTimer = useRef(null);
+
   const updateBlocks = useCallback(nb => {
     setBlocksRaw(nb);
     setProjects(prev => prev.map(p => p.id===selectedId ? {...p, blocks:nb} : p));
   }, [selectedId, setBlocksRaw]);
 
-  // ── Tema día/noche ─────────────────────────────────────────────────────────
-  const [isDark, setIsDark] = useState(() => {
-    try { return localStorage.getItem("plano-theme") !== "light"; } catch { return true; }
-  });
-
-  useEffect(() => {
-    const theme = isDark ? DARK : LIGHT;
-    Object.assign(C, theme);
-    try { localStorage.setItem("plano-theme", isDark ? "dark" : "light"); } catch {}
-  }, [isDark]);
-
-  const toggleTheme = useCallback(() => setIsDark(v => !v), []);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [navTab, setNavTab] = useState("editor");  // desktop left nav
-  const [mobileTab, setMobileTab] = useState("editor"); // mobile bottom nav
+  // ── Autosave a Supabase ────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (!selectedId || loadingProjects) return;
+    setSaving(true);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      const p = projects.find(x=>x.id===selectedId);
+      if (p) {
+        await supabase
+          .from("scripts")
+          .update({ blocks: p.blocks, updated_at: new Date().toISOString() })
+          .eq("id", selectedId);
+      }
+      setSaving(false);
+    }, 1000);
+    return () => clearTimeout(saveTimer.current);
+  }, [projects, selectedId]);
+
+  // ── UI state ───────────────────────────────────────────────────────────────
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [navTab, setNavTab] = useState("editor");
+  const [mobileTab, setMobileTab] = useState("editor");
   const [focusMode, setFocusMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newProjectModal, setNewProjectModal] = useState(false);
@@ -1344,7 +1650,6 @@ export default function App() {
 
   const inputRefs = useRef({});
   const editorRef = useRef(null);
-  const saveTimer = useRef(null);
 
   // ── Mobile detection ───────────────────────────────────────────────────────
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
@@ -1354,16 +1659,6 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Autosave ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    setSaving(true);
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      try { localStorage.setItem("plano-v4", JSON.stringify(projects)); } catch{}
-      setSaving(false);
-    }, 800);
-    return () => clearTimeout(saveTimer.current);
-  }, [projects]);
 
   // ── Auto-resize on project change ──────────────────────────────────────────
   useEffect(() => {
@@ -1486,27 +1781,38 @@ export default function App() {
     setTimeout(() => { inputRefs.current[prev]?.focus(); setActiveIndex(prev); }, 10);
   }, [blocks, updateBlocks]);
 
-  // Proyectos
-  const createProject = () => {
+  // ── Proyectos CRUD ─────────────────────────────────────────────────────────
+  const createProject = async () => {
     if (!newProjectName.trim()) return;
-    const p = {id:uid(), name:newProjectName.trim(), createdAt:Date.now(),
-      blocks:[{id:uid(), type:T.SCENE, text:"", note:""}]};
-    setProjects(prev => [...prev, p]);
-    setSelectedId(p.id);
+    const { data, error } = await supabase
+      .from("scripts")
+      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
+      .select()
+      .single();
+    if (!error && data) {
+      setProjects(prev => [data, ...prev]);
+      setSelectedId(data.id);
+    }
     setNewProjectName("");
     setNewProjectModal(false);
   };
 
-  const deleteProject = id => {
+  const deleteProject = async id => {
     if (projects.length===1) return;
-    if (!confirm("¿Eliminar este guion?")) return;
+    if (!confirm("¿Eliminar este guion? Esta acción no se puede deshacer.")) return;
+    await supabase.from("scripts").delete().eq("id", id);
     const updated = projects.filter(p=>p.id!==id);
     setProjects(updated);
     if (selectedId===id) setSelectedId(updated[0].id);
   };
 
-  const renameProject = (id, name) => {
+  const renameProject = async (id, name) => {
     setProjects(prev => prev.map(p => p.id===id ? {...p, name} : p));
+    await supabase.from("scripts").update({ name }).eq("id", id);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -1514,7 +1820,13 @@ export default function App() {
   const activeTab = isMobile ? mobileTab : navTab;
   const showEditor = activeTab==="editor" || !isMobile;
 
-  const editorContent = (
+  const editorContent = loadingProjects ? (
+    <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+      background:C.bgEditor, color:C.textMuted, fontSize:13,
+      fontFamily:"'Courier Prime',monospace", letterSpacing:2}}>
+      Cargando guiones…
+    </div>
+  ) : (
     <div ref={editorRef} style={{
       flex:1, overflowY:"auto",
       padding:focusMode
@@ -1586,7 +1898,7 @@ export default function App() {
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email}/>
             )}
 
             {/* Center column */}
