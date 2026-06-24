@@ -348,9 +348,30 @@ function InjectStyles({ theme }) {
     el.id = "plano-global-styles";
     el.textContent = makeGlobalCss(C);
     document.head.appendChild(el);
+
+    // Título de la pestaña
+    document.title = "Plano";
+
+    // Favicon SVG minimalista: tira de película
+    const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+      <rect width="32" height="32" rx="6" fill="#12141A"/>
+      <rect x="2" y="4" width="4" height="5" rx="1" fill="#252840"/>
+      <rect x="2" y="14" width="4" height="5" rx="1" fill="#252840"/>
+      <rect x="2" y="23" width="4" height="5" rx="1" fill="#252840"/>
+      <rect x="26" y="4" width="4" height="5" rx="1" fill="#252840"/>
+      <rect x="26" y="14" width="4" height="5" rx="1" fill="#252840"/>
+      <rect x="26" y="23" width="4" height="5" rx="1" fill="#252840"/>
+      <text x="16" y="20" font-family="'Courier New',monospace" font-size="10" font-weight="700"
+        fill="#E4E8F0" text-anchor="middle" letter-spacing="0.5">P</text>
+      <rect x="8" y="22" width="16" height="1.5" rx="0.75" fill="#5B8DEF"/>
+    </svg>`;
+    const faviconUrl = "data:image/svg+xml," + encodeURIComponent(faviconSvg);
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+    link.href = faviconUrl;
+
     return () => document.head.removeChild(el);
   }, []);
-  // Update styles when theme changes
   useEffect(() => {
     const el = document.getElementById("plano-global-styles");
     if (el) el.textContent = makeGlobalCss(C);
