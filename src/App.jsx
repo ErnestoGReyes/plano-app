@@ -127,6 +127,11 @@ const Icons = {
       <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
     </svg>
   ),
+  Help: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  ),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -228,7 +233,24 @@ function getPlaceholder(type) {
 
 function typeLabel(type) {
   return { [T.SCENE]:"ESC",[T.ACTION]:"ACC",[T.CHARACTER]:"PER",
-           [T.PAREN]:"PAR",[T.DIALOGUE]:"DIA",[T.TRANSITION]:"TRA" }[type] || "?";
+           [T.PAREN]:"ACO",[T.DIALOGUE]:"DIA",[T.TRANSITION]:"TRA" }[type] || "?";
+}
+
+function typeName(type) {
+  return { [T.SCENE]:"Encabezado de escena", [T.ACTION]:"Acción",
+           [T.CHARACTER]:"Personaje", [T.PAREN]:"Acotación",
+           [T.DIALOGUE]:"Diálogo", [T.TRANSITION]:"Transición" }[type] || "";
+}
+
+function typeTooltip(type) {
+  return {
+    [T.SCENE]:     "Dónde y cuándo ocurre la escena.\nEj: INT. COCINA - DÍA",
+    [T.ACTION]:    "Lo que se ve en pantalla: movimiento,\nambiente, descripción física.",
+    [T.CHARACTER]: "Nombre del personaje que habla,\nsiempre en mayúsculas.",
+    [T.PAREN]:     "Indicación breve sobre cómo se dice\nel diálogo o qué hace el personaje.\nEj: (susurrando)",
+    [T.DIALOGUE]:  "Las palabras que dice el personaje.",
+    [T.TRANSITION]:"Cambio de escena.\nEj: CORTE A: / FUNDIDO A NEGRO.",
+  }[type] || "";
 }
 
 function typeColor(type) {
@@ -265,8 +287,185 @@ function estimatePages(blocks) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXPORTADOR PDF PROFESIONAL
+// MODAL DE AYUDA — guía de elementos del guion
 // ═══════════════════════════════════════════════════════════════════════════════
+
+const GUIDE_ELEMENTS = [
+  {
+    type: T.SCENE,
+    name: "Encabezado de escena",
+    color: "#5B8DEF",
+    example: "INT. COCINA DE MARIO - DÍA",
+    desc: "Indica dónde y cuándo ocurre la escena. Siempre en mayúsculas. Empieza con INT. (interior) o EXT. (exterior), seguido del lugar y el momento del día.",
+    tip: "Cada vez que cambia el lugar o el tiempo, es una nueva escena.",
+  },
+  {
+    type: T.ACTION,
+    name: "Acción",
+    color: "#E4E8F0",
+    example: "Mario entra a la cocina y abre la heladera. Encuentra una nota pegada en la puerta.",
+    desc: "Describe lo que se ve en pantalla: movimientos, ambientes, objetos importantes, reacciones físicas. Se escribe en presente y en tercera persona.",
+    tip: "Sé visual y conciso. Si no se puede filmar, no va acá.",
+  },
+  {
+    type: T.CHARACTER,
+    name: "Personaje",
+    color: "#3FCA8C",
+    example: "MARIO",
+    desc: "El nombre del personaje que va a hablar, siempre en mayúsculas y centrado. Puede incluir una aclaración entre paréntesis, como (V.O.) para voz en off o (O.S.) para fuera de campo.",
+    tip: "Solo aparece inmediatamente antes del diálogo.",
+  },
+  {
+    type: T.PAREN,
+    name: "Acotación",
+    color: "#F4A96D",
+    example: "(susurrando, sin mirarlo)",
+    desc: "Una indicación breve entre paréntesis sobre cómo se dice el diálogo o qué hace el personaje mientras habla. Va entre el nombre del personaje y el diálogo.",
+    tip: "Usala con moderación — si el diálogo es bueno, no debería necesitar instrucciones.",
+  },
+  {
+    type: T.DIALOGUE,
+    name: "Diálogo",
+    color: "#5B8DEF",
+    example: "No sé quién dejó esto, pero alguien estuvo acá.",
+    desc: "Las palabras exactas que dice el personaje. Va centrado y con márgenes más angostos que la acción, para diferenciarse visualmente en la página.",
+    tip: "El diálogo debe sonar natural al leerlo en voz alta.",
+  },
+  {
+    type: T.TRANSITION,
+    name: "Transición",
+    color: "#9B72F0",
+    example: "CORTE A:",
+    desc: "Indica cómo se pasa de una escena a la siguiente. Los más comunes son CORTE A:, FUNDIDO A NEGRO., y FUNDIDO DESDE NEGRO. Van alineados a la derecha.",
+    tip: "En el cine moderno se usan poco — el corte directo es el default.",
+  },
+];
+
+function HelpModal({ onClose, isDark }) {
+  const [active, setActive] = useState(0);
+  const el = GUIDE_ELEMENTS[active];
+
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:500, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:18, width:"100%", maxWidth:580,
+        boxShadow:`0 32px 80px ${C.shadow}`,
+        display:"flex", flexDirection:"column", maxHeight:"90dvh", overflow:"hidden",
+      }}>
+        {/* Header */}
+        <div style={{padding:"22px 24px 0", display:"flex", alignItems:"flex-start", justifyContent:"space-between"}}>
+          <div>
+            <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:17, color:C.textPrimary}}>
+              Guía de elementos
+            </div>
+            <div style={{fontSize:12, color:C.textMuted, marginTop:3}}>
+              Cómo funciona un guion profesional
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
+            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex", marginTop:2}}>
+            <Icons.Close/>
+          </button>
+        </div>
+
+        {/* Tab selector */}
+        <div style={{display:"flex", gap:4, padding:"16px 24px 0", overflowX:"auto",
+          scrollbarWidth:"none", WebkitOverflowScrolling:"touch"}}>
+          {GUIDE_ELEMENTS.map((g, i) => (
+            <button key={g.type} onClick={()=>setActive(i)} style={{
+              padding:"6px 12px", borderRadius:20, border:"none", cursor:"pointer",
+              fontSize:11, fontWeight:600, whiteSpace:"nowrap", transition:"all .15s",
+              background: active===i ? g.color : C.bgCard,
+              color: active===i ? (isDark?"#12141A":"#fff") : C.textMuted,
+              fontFamily:"inherit",
+            }}>
+              {g.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{padding:"20px 24px 24px", overflowY:"auto", flex:1}}>
+          {/* Example box */}
+          <div style={{
+            background:C.bgEditor, border:`1px solid ${C.border}`,
+            borderRadius:12, padding:"20px 24px", marginBottom:20,
+            fontFamily:"'Courier Prime',monospace", fontSize:13,
+          }}>
+            <div style={{fontSize:10, fontWeight:600, color:C.textMuted,
+              letterSpacing:.8, textTransform:"uppercase", marginBottom:12}}>
+              Así se ve en la página
+            </div>
+            {/* Mini screenplay preview */}
+            <div style={{color:C.textMuted, fontSize:12, marginBottom:4}}>INT. LUGAR - DÍA</div>
+            <div style={{color:C.textSec, fontSize:12, marginBottom:8}}>Una descripción de la escena.</div>
+            {/* Highlighted element */}
+            <div style={{
+              background:`rgba(${hexToRgb(el.color)},.12)`,
+              border:`1.5px solid rgba(${hexToRgb(el.color)},.35)`,
+              borderRadius:7, padding:"8px 12px", marginBottom:4,
+              color:el.color, fontSize:12, fontWeight:700,
+              textAlign: el.type===T.CHARACTER||el.type===T.PAREN||el.type===T.DIALOGUE ? "center" : 
+                         el.type===T.TRANSITION ? "right" : "left",
+            }}>
+              {el.example}
+            </div>
+            {(el.type===T.CHARACTER) && (
+              <div style={{color:C.textSec, fontSize:12, textAlign:"center"}}>El diálogo va acá.</div>
+            )}
+          </div>
+
+          {/* Description */}
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:14, fontWeight:600, color:C.textPrimary, marginBottom:8}}>
+              {el.name}
+            </div>
+            <p style={{fontSize:13, color:C.textSec, lineHeight:1.65, margin:0}}>
+              {el.desc}
+            </p>
+          </div>
+
+          {/* Tip */}
+          <div style={{
+            background:`rgba(${hexToRgb(C.yellow)},.08)`,
+            border:`1px solid rgba(${hexToRgb(C.yellow)},.2)`,
+            borderRadius:9, padding:"11px 14px",
+            display:"flex", gap:10, alignItems:"flex-start",
+          }}>
+            <span style={{fontSize:14, flexShrink:0}}>💡</span>
+            <p style={{fontSize:12, color:C.textSec, lineHeight:1.6, margin:0}}>
+              <strong style={{color:C.yellow}}>Consejo: </strong>{el.tip}
+            </p>
+          </div>
+
+          {/* Navigation */}
+          <div style={{display:"flex", justifyContent:"space-between", marginTop:20, gap:8}}>
+            <Btn onClick={()=>setActive(v=>Math.max(0,v-1))} disabled={active===0}
+              style={{fontSize:12, padding:"7px 14px"}}>
+              ← Anterior
+            </Btn>
+            <span style={{fontSize:11, color:C.textMuted, alignSelf:"center"}}>
+              {active+1} / {GUIDE_ELEMENTS.length}
+            </span>
+            <Btn onClick={()=>setActive(v=>Math.min(GUIDE_ELEMENTS.length-1,v+1))}
+              disabled={active===GUIDE_ELEMENTS.length-1}
+              variant={active===GUIDE_ELEMENTS.length-1?"outline":"primary"}
+              style={{fontSize:12, padding:"7px 14px"}}>
+              Siguiente →
+            </Btn>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
   const [format, setFormat]         = useState("hollywood");
@@ -806,7 +1005,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
 // NAV SIDEBAR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail }) {
+function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail, onHelp }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
@@ -865,6 +1064,16 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
 
       <div style={{flex:1}}/>
 
+      {/* Ayuda */}
+      <button onClick={onHelp} title="Guía de elementos del guion"
+        style={{padding:"8px", borderRadius:8, border:"none", background:"none",
+          color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
+          display:"flex", alignItems:"center", justifyContent:"center", width:"100%"}}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
+        <Icons.Help/>
+      </button>
+
       {/* Theme toggle */}
       <button onClick={onToggleTheme} title={isDark ? "Modo día" : "Modo noche"}
         style={{padding:"8px", borderRadius:8, border:"none", background:"none",
@@ -906,7 +1115,7 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
 // BOTTOM NAV — MOBILE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme }) {
+function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onHelp }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
@@ -928,6 +1137,10 @@ function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme }) {
           <span style={{fontSize:8.5}}>{it.label}</span>
         </button>
       ))}
+      <button onClick={onHelp} className="mobile-nav-btn" title="Guía">
+        <Icons.Help style={{width:20,height:20}}/>
+        <span style={{fontSize:8.5}}>Guía</span>
+      </button>
       <button onClick={onToggleTheme} className="mobile-nav-btn" title={isDark?"Modo día":"Modo noche"}>
         {isDark ? <Icons.Sun style={{width:20,height:20}}/> : <Icons.Moon style={{width:20,height:20}}/>}
         <span style={{fontSize:8.5}}>{isDark?"Día":"Noche"}</span>
@@ -1320,7 +1533,7 @@ function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, project
     {type:T.SCENE,      label:"Escena",    short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     label:"Acción",    short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  label:"Personaje", short:"PER", color:C.green},
-    {type:T.PAREN,      label:"(paren)",   short:"PAR", color:"#F4A96D"},
+    {type:T.PAREN,      label:"Acotación",   short:"ACO", color:"#F4A96D"},
     {type:T.DIALOGUE,   label:"Diálogo",   short:"DIA", color:C.accent},
     {type:T.TRANSITION, label:"Transición",short:"TRA", color:C.purple},
   ];
@@ -1403,7 +1616,7 @@ function MobileEditorHeader({ projectName, words, pages, scenes, saving,
     {type:T.SCENE,      short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  short:"PER", color:C.green},
-    {type:T.PAREN,      short:"PAR", color:"#F4A96D"},
+    {type:T.PAREN,      short:"ACO", color:"#F4A96D"},
     {type:T.DIALOGUE,   short:"DIA", color:C.accent},
     {type:T.TRANSITION, short:"TRA", color:C.purple},
   ];
@@ -1548,12 +1761,14 @@ function ScriptBlock({ block, index, isActive, characterColors, onUpdate, onFocu
       paddingLeft:8, paddingRight:0, borderRadius:4, transition:"background .1s"}}
       onClick={()=>onFocus(index)}>
 
-      {/* Type badge — desktop only, left gutter */}
+      {/* Type badge — desktop only, left gutter, with tooltip */}
       {isActive && !isMobile && (
         <div style={{position:"absolute", left:-48, top:0, fontSize:8, fontWeight:700,
           color:col, letterSpacing:.5, textTransform:"uppercase",
           background:`rgba(${hexToRgb(col)},.1)`, padding:"2px 5px", borderRadius:3,
-          border:`1px solid rgba(${hexToRgb(col)},.2)`}}>
+          border:`1px solid rgba(${hexToRgb(col)},.2)`, cursor:"help",
+          userSelect:"none"}}
+          title={`${typeName(block.type)}\n\n${typeTooltip(block.type)}`}>
           {typeLabel(block.type)}
         </div>
       )}
@@ -1965,6 +2180,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   const [newProjectModal, setNewProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   const inputRefs = useRef({});
   const editorRef = useRef(null);
@@ -2224,6 +2440,11 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         />
       )}
 
+      {/* Modal de ayuda */}
+      {showHelpModal && (
+        <HelpModal isDark={isDark} onClose={()=>setShowHelpModal(false)}/>
+      )}
+
       <div style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .2s"}}>
 
         {/* ── DESKTOP ── */}
@@ -2231,7 +2452,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)}/>
             )}
 
             {/* Center column */}
@@ -2327,7 +2548,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                 if (t==="editor") {
                   setTimeout(()=>inputRefs.current[activeIndex]?.focus(), 100);
                 }
-              }} saving={saving} isDark={isDark} onToggleTheme={toggleTheme}/>
+              }} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onHelp={()=>setShowHelpModal(true)}/>
             )}
           </div>
         )}
