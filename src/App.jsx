@@ -264,34 +264,351 @@ function estimatePages(blocks) {
 // EXPORTAR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function exportToPDF(blocks, projectName) {
-  const lines = [];
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXPORTADOR PDF PROFESIONAL
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
+  const [format, setFormat]         = useState("hollywood");
+  const [author, setAuthor]         = useState("");
+  const [sceneNumbers, setSceneNumbers] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  const inputStyle = {
+    width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
+    borderRadius:9, padding:"10px 14px", color:C.textPrimary, fontSize:13,
+    outline:"none", fontFamily:"inherit", boxSizing:"border-box",
+    transition:"border-color .15s",
+  };
+
+  const radioStyle = (active) => ({
+    display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px",
+    borderRadius:10, border:`1.5px solid ${active ? C.accent : C.borderBright}`,
+    background: active ? C.accentGlow : "none",
+    cursor:"pointer", transition:"all .15s",
+  });
+
+  const generate = () => {
+    setGenerating(true);
+    setTimeout(() => {
+      exportToPDFPro(blocks, projectName, { format, author, sceneNumbers });
+      setGenerating(false);
+      onClose();
+    }, 100);
+  };
+
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.6)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:500, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:16, padding:"28px 24px", width:"100%", maxWidth:420,
+        boxShadow:`0 24px 60px ${C.shadow}`,
+      }}>
+        {/* Header */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22}}>
+          <div>
+            <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
+              Exportar PDF
+            </div>
+            <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>Formato profesional de guion</div>
+          </div>
+          <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
+            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex"}}>
+            <Icons.Close/>
+          </button>
+        </div>
+
+        {/* Formato */}
+        <div style={{marginBottom:18}}>
+          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+            textTransform:"uppercase", marginBottom:10}}>Formato</div>
+          <div style={{display:"flex", flexDirection:"column", gap:8}}>
+            <div style={radioStyle(format==="hollywood")} onClick={()=>setFormat("hollywood")}>
+              <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="hollywood"?C.accent:C.borderBright}`,
+                background:format==="hollywood"?C.accent:"none", flexShrink:0, marginTop:1,
+                display:"flex", alignItems:"center", justifyContent:"center"}}>
+                {format==="hollywood" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
+              </div>
+              <div>
+                <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Hollywood (estándar)</div>
+                <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+                  Página Letter · márgenes WGA · Courier 12pt · personaje a 3.7"
+                </div>
+              </div>
+            </div>
+            <div style={radioStyle(format==="european")} onClick={()=>setFormat("european")}>
+              <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="european"?C.accent:C.borderBright}`,
+                background:format==="european"?C.accent:"none", flexShrink:0, marginTop:1,
+                display:"flex", alignItems:"center", justifyContent:"center"}}>
+                {format==="european" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
+              </div>
+              <div>
+                <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Europeo / Español</div>
+                <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+                  Página A4 · márgenes europeos · etiquetas en español
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Autor */}
+        <div style={{marginBottom:16}}>
+          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+            textTransform:"uppercase", marginBottom:8}}>Autor / Guionista</div>
+          <input
+            type="text" value={author} placeholder="Tu nombre"
+            onChange={e=>setAuthor(e.target.value)} style={inputStyle}
+            onFocus={e=>e.target.style.borderColor=C.accent}
+            onBlur={e=>e.target.style.borderColor=C.borderBright}
+          />
+        </div>
+
+        {/* Opciones */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+            textTransform:"uppercase", marginBottom:10}}>Opciones</div>
+          <label style={{display:"flex", alignItems:"center", gap:10, cursor:"pointer"}}>
+            <div onClick={()=>setSceneNumbers(v=>!v)} style={{
+              width:18, height:18, borderRadius:5, border:`2px solid ${sceneNumbers?C.accent:C.borderBright}`,
+              background:sceneNumbers?C.accent:"none", flexShrink:0,
+              display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s",
+            }}>
+              {sceneNumbers && <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                <polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>}
+            </div>
+            <div>
+              <div style={{fontSize:13, color:C.textPrimary}}>Numeración de escenas</div>
+              <div style={{fontSize:11, color:C.textMuted}}>Agrega número al inicio de cada encabezado</div>
+            </div>
+          </label>
+        </div>
+
+        {/* Botón */}
+        <button onClick={generate} disabled={generating} style={{
+          width:"100%", padding:"13px", borderRadius:10, border:"none",
+          background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
+          cursor:generating?"wait":"pointer", opacity:generating?.7:1,
+          fontFamily:"'Courier Prime',monospace", letterSpacing:.5,
+          display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+        }}>
+          <Icons.PDF style={{width:15,height:15}}/> {generating ? "Generando…" : "Generar PDF"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function exportToPDFPro(blocks, projectName, { format, author, sceneNumbers }) {
+  const isHollywood = format === "hollywood";
+
+  // ── Métricas de página ────────────────────────────────────────────────────
+  // Todas las medidas en puntos (1in = 72pt)
+  const page = isHollywood
+    ? { w:612, h:792, mt:72, mb:72, ml:108, mr:72 }   // Letter, 1.5" left, 1" resto
+    : { w:595, h:842, mt:72, mb:72, ml:85,  mr:57  };  // A4, ~1.18" left, ~0.8" right
+
+  const textW = page.w - page.ml - page.mr; // ancho del área de texto
+
+  // ── Posiciones horizontales (en puntos desde margen izquierdo) ────────────
+  const pos = isHollywood ? {
+    scene:      0,
+    action:     0,
+    character:  page.ml + 144,  // 3.7" desde borde = ml + 2" desde margen
+    paren:      page.ml + 90,   // 2.9" desde borde
+    dialogue:   page.ml + 72,   // 2.5" desde borde — ancho máx 3.5"
+    transition: page.w - page.mr - 120,
+    dialogueW:  252,
+    parenW:     216,
+  } : {
+    scene:      0,
+    action:     0,
+    character:  page.ml + 100,
+    paren:      page.ml + 60,
+    dialogue:   page.ml + 50,
+    transition: page.w - page.mr - 100,
+    dialogueW:  300,
+    parenW:     240,
+  };
+
+  // ── Helpers de texto ─────────────────────────────────────────────────────
+  const CHAR_W = 7.2; // ancho aprox de un char en Courier 12pt
+  const wrapText = (text, maxChars) => {
+    const words = text.split(" ");
+    const lines = []; let line = "";
+    for (const w of words) {
+      if ((line + w).length <= maxChars) { line += (line ? " " : "") + w; }
+      else { if (line) lines.push(line); line = w; }
+    }
+    if (line) lines.push(line);
+    return lines.length ? lines : [""];
+  };
+
+  const actionMaxChars  = Math.floor(textW / CHAR_W);
+  const dialogueMaxChars = Math.floor(pos.dialogueW / CHAR_W);
+  const parenMaxChars   = Math.floor(pos.parenW / CHAR_W);
+
+  // ── Generación de contenido ───────────────────────────────────────────────
+  let sceneCount = 0;
+
+  const elements = []; // {type, lines, raw}
+
   blocks.forEach(b => {
     if (!b.text.trim()) return;
     const t = b.type;
-    if (t===T.SCENE)      lines.push(`<p class="scene">${b.text.toUpperCase()}</p>`);
-    else if (t===T.ACTION) lines.push(`<p class="action">${b.text}</p>`);
-    else if (t===T.CHARACTER) lines.push(`<p class="character">${b.text.toUpperCase()}</p>`);
-    else if (t===T.PAREN)   lines.push(`<p class="paren">${b.text}</p>`);
-    else if (t===T.DIALOGUE) lines.push(`<p class="dialogue">${b.text}</p>`);
-    else if (t===T.TRANSITION) lines.push(`<p class="transition">${b.text.toUpperCase()}</p>`);
+    if (t === T.SCENE) {
+      sceneCount++;
+      const label = sceneNumbers ? `${sceneCount}. ${b.text.toUpperCase()}` : b.text.toUpperCase();
+      elements.push({ type:"scene", lines:[label] });
+    } else if (t === T.ACTION) {
+      elements.push({ type:"action", lines: wrapText(b.text, actionMaxChars) });
+    } else if (t === T.CHARACTER) {
+      elements.push({ type:"character", lines:[b.text.toUpperCase()] });
+    } else if (t === T.PAREN) {
+      const txt = b.text.startsWith("(") ? b.text : `(${b.text})`;
+      elements.push({ type:"paren", lines: wrapText(txt, parenMaxChars) });
+    } else if (t === T.DIALOGUE) {
+      elements.push({ type:"dialogue", lines: wrapText(b.text, dialogueMaxChars) });
+    } else if (t === T.TRANSITION) {
+      elements.push({ type:"transition", lines:[b.text.toUpperCase()] });
+    }
   });
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${projectName}</title><style>
-  @page{size:Letter;margin:1in 1in 1in 1.5in}
-  body{font-family:'Courier New',monospace;font-size:12pt;line-height:1.7;color:#000;background:#fff}
-  p{margin:0}.scene{font-weight:bold;margin-top:24pt;margin-bottom:6pt}
-  .action{margin-bottom:12pt}.character{margin-left:2.5in;margin-top:12pt;font-weight:bold}
-  .paren{margin-left:1.8in;margin-right:1.8in;font-style:italic}
-  .dialogue{margin-left:1.5in;margin-right:1.5in;margin-bottom:12pt}
-  .transition{text-align:right;margin-top:12pt;margin-bottom:12pt;font-weight:bold}
-  h1{text-align:center;margin-bottom:6pt;font-size:14pt}.byline{text-align:center;margin-bottom:48pt}
-  </style></head><body>
-  <h1>${projectName}</h1><p class="byline">Escrito con PLANO Screenwriting</p>
-  ${lines.join("\n")}</body></html>`;
-  const w = window.open("","_blank");
+
+  // ── Espaciado vertical por tipo (en puntos) ───────────────────────────────
+  const LINE_H  = 14.4; // 12pt * 1.2
+  const spacing = {
+    scene:      { before:24, after:12 },
+    action:     { before:0,  after:12 },
+    character:  { before:12, after:0  },
+    paren:      { before:0,  after:0  },
+    dialogue:   { before:0,  after:12 },
+    transition: { before:12, after:12 },
+  };
+
+  // ── Paginación ────────────────────────────────────────────────────────────
+  const pages = []; // array de arrays de renderItems
+  let currentPage = [];
+  let y = page.mt; // cursor vertical
+  const usableH = page.h - page.mt - page.mb;
+
+  const newPage = () => {
+    pages.push(currentPage);
+    currentPage = [];
+    y = page.mt;
+  };
+
+  elements.forEach(el => {
+    const sp = spacing[el.type];
+    const blockH = sp.before + el.lines.length * LINE_H + sp.after;
+    if (y + blockH > page.h - page.mb && currentPage.length > 0) newPage();
+    currentPage.push({ ...el, y: y + sp.before });
+    y += blockH;
+  });
+  if (currentPage.length > 0) pages.push(currentPage);
+  const totalPages = pages.length;
+
+  // ── Render HTML ───────────────────────────────────────────────────────────
+  const px = v => `${v}px`; // SVG usa px, pero usaremos pt directamente con transform
+
+  // Renderizamos cada página como un div con position absolute children
+  // para máximo control tipográfico
+  const renderPage = (items, pageNum) => {
+    const W = page.w, H = page.h;
+    const ml = page.ml, mr = page.mr;
+
+    const renderItem = (el) => {
+      let html = "";
+      if (el.type === "scene") {
+        html = `<div style="position:absolute;top:${el.y}pt;left:${ml}pt;right:${mr}pt;
+          font-weight:bold;text-decoration:underline;">${el.lines[0]}</div>`;
+      } else if (el.type === "action") {
+        html = el.lines.map((ln, i) =>
+          `<div style="position:absolute;top:${el.y + i*LINE_H}pt;left:${ml}pt;right:${mr}pt;">${ln || "&nbsp;"}</div>`
+        ).join("");
+      } else if (el.type === "character") {
+        html = `<div style="position:absolute;top:${el.y}pt;left:${pos.character}pt;">${el.lines[0]}</div>`;
+      } else if (el.type === "paren") {
+        html = el.lines.map((ln, i) =>
+          `<div style="position:absolute;top:${el.y + i*LINE_H}pt;left:${pos.paren}pt;width:${pos.parenW}pt;font-style:italic;">${ln || "&nbsp;"}</div>`
+        ).join("");
+      } else if (el.type === "dialogue") {
+        html = el.lines.map((ln, i) =>
+          `<div style="position:absolute;top:${el.y + i*LINE_H}pt;left:${pos.dialogue}pt;width:${pos.dialogueW}pt;">${ln || "&nbsp;"}</div>`
+        ).join("");
+      } else if (el.type === "transition") {
+        html = `<div style="position:absolute;top:${el.y}pt;right:${mr}pt;font-weight:bold;">${el.lines[0]}</div>`;
+      }
+      return html;
+    };
+
+    const pageNumHtml = pageNum > 1
+      ? `<div style="position:absolute;top:${page.mt/2}pt;right:${mr}pt;">${pageNum}.</div>`
+      : "";
+
+    return `
+      <div class="screenplay-page" style="position:relative;width:${W}pt;height:${H}pt;
+        page-break-after:always;overflow:hidden;">
+        ${pageNumHtml}
+        ${items.map(renderItem).join("")}
+      </div>`;
+  };
+
+  // ── Portada ───────────────────────────────────────────────────────────────
+  const coverHtml = `
+    <div class="screenplay-page" style="position:relative;width:${page.w}pt;height:${page.h}pt;
+      page-break-after:always;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div style="text-align:center;">
+        <div style="font-size:18pt;font-weight:bold;margin-bottom:24pt;">${projectName}</div>
+        ${author ? `<div style="font-size:12pt;margin-bottom:6pt;">Escrito por</div>
+        <div style="font-size:14pt;font-weight:bold;">${author}</div>` : ""}
+        <div style="margin-top:48pt;font-size:10pt;color:#666;">Generado con PLANO Screenwriting</div>
+      </div>
+    </div>`;
+
+  // ── HTML final ────────────────────────────────────────────────────────────
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>${projectName}</title>
+  <style>
+    @page { size: ${isHollywood ? "letter" : "A4"}; margin: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { background: #fff; }
+    body {
+      font-family: 'Courier Prime', 'Courier New', Courier, monospace;
+      font-size: 12pt;
+      line-height: 1.2;
+      color: #000;
+    }
+    .screenplay-page { background: #fff; }
+    @media screen {
+      body { background: #888; padding: 20px; display:flex; flex-direction:column; align-items:center; gap:20px; }
+      .screenplay-page { box-shadow: 0 4px 20px rgba(0,0,0,.4); }
+    }
+    @media print {
+      body { background: #fff; padding: 0; gap: 0; }
+      .screenplay-page { box-shadow: none; page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+  ${coverHtml}
+  ${pages.map((items, i) => renderPage(items, i + 1)).join("\n")}
+  <script>
+    window.addEventListener('load', () => setTimeout(() => window.print(), 600));
+  </script>
+</body>
+</html>`;
+
+  const w = window.open("", "_blank");
   w.document.write(html);
   w.document.close();
-  setTimeout(() => w.print(), 400);
 }
 
 function exportToFountain(blocks, projectName) {
@@ -1585,13 +1902,12 @@ function PlanoApp({ session, isDark, toggleTheme }) {
       if (!error && data) {
         if (data.length === 0) {
           // Primer uso: crear guion de ejemplo
-         const def = DEFAULT_PROJECT();
-const { data: { user } } = await supabase.auth.getUser();
-const { data: created } = await supabase
-  .from("scripts")
-  .insert({ name: def.name, blocks: def.blocks, user_id: user.id })
-  .select()
-  .single();
+          const def = DEFAULT_PROJECT();
+          const { data: created } = await supabase
+            .from("scripts")
+            .insert({ name: def.name, blocks: def.blocks })
+            .select()
+            .single();
           if (created) { setProjects([created]); setSelectedId(created.id); }
         } else {
           setProjects(data);
@@ -1648,6 +1964,7 @@ const { data: created } = await supabase
   const [searchQuery, setSearchQuery] = useState("");
   const [newProjectModal, setNewProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const inputRefs = useRef({});
   const editorRef = useRef(null);
@@ -1784,24 +2101,19 @@ const { data: created } = await supabase
 
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
-  if (!newProjectName.trim()) return;
-  const { data: { user } } = await supabase.auth.getUser();
-  const { data, error } = await supabase
-    .from("scripts")
-    .insert({ 
-      name: newProjectName.trim(), 
-      blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
-      user_id: user.id
-    })
-    .select()
-    .single();
-  if (!error && data) {
-    setProjects(prev => [data, ...prev]);
-    setSelectedId(data.id);
-  }
-  setNewProjectName("");
-  setNewProjectModal(false);
-};
+    if (!newProjectName.trim()) return;
+    const { data, error } = await supabase
+      .from("scripts")
+      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
+      .select()
+      .single();
+    if (!error && data) {
+      setProjects(prev => [data, ...prev]);
+      setSelectedId(data.id);
+    }
+    setNewProjectName("");
+    setNewProjectModal(false);
+  };
 
   const deleteProject = async id => {
     if (projects.length===1) return;
@@ -1894,10 +2206,25 @@ const { data: created } = await supabase
     searchQuery, onSearchQuery: setSearchQuery, searchResults,
   };
 
+  // ── Actualizar C sincrónicamente antes del render ──────────────────────────
+  // Esto evita el glitch donde componentes internos leen valores viejos de C
+  Object.assign(C, isDark ? DARK : LIGHT);
+
   return (
     <>
       <InjectStyles theme={isDark?"dark":"light"}/>
-      <div key={isDark?"dark":"light"} style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .25s, color .25s"}}>
+
+      {/* Modal de exportación PDF */}
+      {showExportModal && (
+        <ExportPDFModal
+          blocks={blocks}
+          projectName={project?.name||"Guion"}
+          isDark={isDark}
+          onClose={()=>setShowExportModal(false)}
+        />
+      )}
+
+      <div style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .2s"}}>
 
         {/* ── DESKTOP ── */}
         {!isMobile && (
@@ -1914,7 +2241,7 @@ const { data: created } = await supabase
                   <Toolbar
                     activeType={blocks[activeIndex]?.type||T.ACTION}
                     onTypeChange={changeType}
-                    onExport={()=>exportToPDF(blocks, project?.name||"Guion")}
+                    onExport={()=>setShowExportModal(true)}
                     onExportFountain={()=>exportToFountain(blocks, project?.name||"Guion")}
                     projectName={project?.name} saving={saving}
                     canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo}
@@ -1970,7 +2297,7 @@ const { data: created } = await supabase
                 activeType={blocks[activeIndex]?.type||T.ACTION}
                 onTypeChange={changeType}
                 canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo}
-                onExport={()=>exportToPDF(blocks, project?.name||"Guion")}
+                onExport={()=>setShowExportModal(true)}
                 onExportFountain={()=>exportToFountain(blocks, project?.name||"Guion")}
                 focusMode={focusMode} onFocusMode={()=>setFocusMode(v=>!v)}/>
             )}
