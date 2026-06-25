@@ -1585,12 +1585,13 @@ function PlanoApp({ session, isDark, toggleTheme }) {
       if (!error && data) {
         if (data.length === 0) {
           // Primer uso: crear guion de ejemplo
-          const def = DEFAULT_PROJECT();
-          const { data: created } = await supabase
-            .from("scripts")
-            .insert({ name: def.name, blocks: def.blocks })
-            .select()
-            .single();
+         const def = DEFAULT_PROJECT();
+const { data: { user } } = await supabase.auth.getUser();
+const { data: created } = await supabase
+  .from("scripts")
+  .insert({ name: def.name, blocks: def.blocks, user_id: user.id })
+  .select()
+  .single();
           if (created) { setProjects([created]); setSelectedId(created.id); }
         } else {
           setProjects(data);
@@ -1783,19 +1784,24 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
-    if (!newProjectName.trim()) return;
-    const { data, error } = await supabase
-      .from("scripts")
-      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
-      .select()
-      .single();
-    if (!error && data) {
-      setProjects(prev => [data, ...prev]);
-      setSelectedId(data.id);
-    }
-    setNewProjectName("");
-    setNewProjectModal(false);
-  };
+  if (!newProjectName.trim()) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("scripts")
+    .insert({ 
+      name: newProjectName.trim(), 
+      blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
+      user_id: user.id
+    })
+    .select()
+    .single();
+  if (!error && data) {
+    setProjects(prev => [data, ...prev]);
+    setSelectedId(data.id);
+  }
+  setNewProjectName("");
+  setNewProjectModal(false);
+};
 
   const deleteProject = async id => {
     if (projects.length===1) return;
