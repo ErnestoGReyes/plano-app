@@ -14,7 +14,15 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  import.meta.env.VITE_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      storageKey: "sb-opvethjxczahowhdtckl-auth-token",
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+    }
+  }
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2317,19 +2325,26 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
-    if (!newProjectName.trim()) return;
-    const { data, error } = await supabase
-      .from("scripts")
-      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
-      .select()
-      .single();
-    if (!error && data) {
-      setProjects(prev => [data, ...prev]);
-      setSelectedId(data.id);
-    }
-    setNewProjectName("");
-    setNewProjectModal(false);
-  };
+  if (!newProjectName.trim()) return;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data, error } = await supabase
+    .from("scripts")
+    .insert({ 
+      name: newProjectName.trim(), 
+      blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
+      user_id: user.id
+    })
+    .select()
+    .single();
+  if (error) { console.error("Error creando guion:", error); return; }
+  if (data) {
+    setProjects(prev => [data, ...prev]);
+    setSelectedId(data.id);
+  }
+  setNewProjectName("");
+  setNewProjectModal(false);
+};
 
   const deleteProject = async id => {
     if (projects.length===1) return;
