@@ -14,15 +14,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-  {
-    auth: {
-      storageKey: "sb-opvethjxczahowhdtckl-auth-token",
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    }
-  }
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -138,6 +130,22 @@ const Icons = {
   Help: (props) => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  ),
+  Bin: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/>
+    </svg>
+  ),
+  Restore: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+    </svg>
+  ),
+  Drag: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/>
+      <circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
     </svg>
   ),
 };
@@ -295,8 +303,225 @@ function estimatePages(blocks) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// MODAL DE AYUDA — guía de elementos del guion
+// ONBOARDING — bienvenida + tour permanente
 // ═══════════════════════════════════════════════════════════════════════════════
+
+function OnboardingModal({ onClose, isDark }) {
+  const [step, setStep] = useState(0);
+
+  const steps = [
+    {
+      icon: <svg width="40" height="31" viewBox="0 0 52 40" fill="none">
+        <rect width="52" height="40" rx="7" fill={isDark?"#0E1015":"#E8EAF0"} stroke={isDark?"#252840":"#C4CBDE"} strokeWidth="0.75"/>
+        <rect x="3" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace" fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"} textAnchor="middle" letterSpacing="2">PLANO</text>
+        <rect x="10" y="28" width="30" height="1.5" rx="0.75" fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
+      </svg>,
+      title: "Bienvenido a Plano",
+      desc: "Tu herramienta para escribir guiones profesionales. Guardado automático en la nube, exportación en formato Hollywood y europeo, y todo lo que necesitás para llevar tu historia a la pantalla.",
+      tip: null,
+    },
+    {
+      icon: <Icons.Editor style={{width:36,height:36,color:C.accent}}/>,
+      title: "El editor de guion",
+      desc: "Cada línea del guion es un bloque con un tipo específico: escena, acción, personaje, acotación, diálogo o transición. Usá Tab para cambiar el tipo y Enter para crear el siguiente bloque.",
+      tip: "El tipo se sugiere automáticamente según el contexto.",
+    },
+    {
+      icon: <Icons.Scenes style={{width:36,height:36,color:C.accentWarm}}/>,
+      title: "Índice de escenas",
+      desc: "En la pestaña Escenas ves todas las escenas del guion ordenadas. Podés hacer click en cualquiera para ir directo a ella. También podés reordenarlas arrastrando.",
+      tip: "Una escena empieza con INT. o EXT. seguido del lugar.",
+    },
+    {
+      icon: <Icons.Notes style={{width:36,height:36,color:C.green}}/>,
+      title: "Notas por bloque",
+      desc: "Cada bloque del guion puede tener una nota privada. Son invisibles en el PDF final — sirven para recordatorios, referencias, ideas alternativas o preguntas que querés resolver después.",
+      tip: "Las notas aparecen en la pestaña Notas del panel lateral.",
+    },
+    {
+      icon: <Icons.PDF style={{width:36,height:36,color:C.purple}}/>,
+      title: "Exportar el guion",
+      desc: "Cuando terminés, podés exportar a PDF en formato Hollywood (estándar WGA) o Europeo/Español. El PDF incluye portada con tu nombre, numeración de páginas y el posicionamiento tipográfico exacto.",
+      tip: "También podés exportar a .fountain, el formato estándar de la industria.",
+    },
+  ];
+
+  const s = steps[step];
+  const isLast = step === steps.length - 1;
+
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.7)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:600, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:20, width:"100%", maxWidth:440,
+        boxShadow:`0 32px 80px ${C.shadow}`,
+        overflow:"hidden",
+      }}>
+        {/* Progress bar */}
+        <div style={{height:3, background:C.border}}>
+          <div style={{height:"100%", background:C.accent, borderRadius:2,
+            width:`${((step+1)/steps.length)*100}%`, transition:"width .3s ease"}}/>
+        </div>
+
+        <div style={{padding:"32px 28px 28px"}}>
+          {/* Icon */}
+          <div style={{display:"flex", justifyContent:"center", marginBottom:24}}>
+            {s.icon}
+          </div>
+
+          {/* Text */}
+          <h2 style={{fontFamily:"'Courier Prime',monospace", fontSize:20, fontWeight:700,
+            color:C.textPrimary, margin:"0 0 12px", textAlign:"center"}}>
+            {s.title}
+          </h2>
+          <p style={{fontSize:13, color:C.textSec, lineHeight:1.7, margin:"0 0 20px", textAlign:"center"}}>
+            {s.desc}
+          </p>
+
+          {/* Tip */}
+          {s.tip && (
+            <div style={{background:C.bgCard, border:`1px solid ${C.border}`,
+              borderRadius:10, padding:"10px 14px", marginBottom:20,
+              display:"flex", gap:8, alignItems:"flex-start"}}>
+              <span style={{fontSize:13, flexShrink:0}}>💡</span>
+              <p style={{fontSize:12, color:C.textMuted, margin:0, lineHeight:1.6}}>{s.tip}</p>
+            </div>
+          )}
+
+          {/* Step dots */}
+          <div style={{display:"flex", justifyContent:"center", gap:6, marginBottom:24}}>
+            {steps.map((_,i) => (
+              <div key={i} onClick={()=>setStep(i)} style={{
+                width:i===step?20:6, height:6, borderRadius:3,
+                background:i===step?C.accent:C.border,
+                cursor:"pointer", transition:"all .25s",
+              }}/>
+            ))}
+          </div>
+
+          {/* Buttons */}
+          <div style={{display:"flex", gap:8}}>
+            {step > 0 && (
+              <Btn onClick={()=>setStep(v=>v-1)}
+                style={{flex:1, padding:"11px", fontSize:13, justifyContent:"center"}}>
+                ← Anterior
+              </Btn>
+            )}
+            <button onClick={isLast ? onClose : ()=>setStep(v=>v+1)} style={{
+              flex:2, padding:"11px", borderRadius:10, border:"none",
+              background:isLast?C.green:C.accent, color:"#fff",
+              fontSize:14, fontWeight:600, cursor:"pointer",
+              fontFamily:"inherit", transition:"opacity .15s",
+            }}>
+              {isLast ? "¡Empezar a escribir! 🎬" : "Siguiente →"}
+            </button>
+          </div>
+
+          {/* Skip */}
+          {!isLast && (
+            <button onClick={onClose} style={{
+              display:"block", width:"100%", marginTop:10, background:"none",
+              border:"none", color:C.textFaint, fontSize:11, cursor:"pointer",
+              fontFamily:"inherit", padding:"4px",
+            }}>
+              Saltar introducción
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAPELERA
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClose }) {
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:500, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:16, width:"100%", maxWidth:420,
+        boxShadow:`0 24px 60px ${C.shadow}`,
+        maxHeight:"80dvh", display:"flex", flexDirection:"column",
+      }}>
+        {/* Header */}
+        <div style={{padding:"20px 20px 0", display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+          <div>
+            <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
+              Papelera
+            </div>
+            <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+              Máximo 10 guiones · se borran definitivamente a los 30 días
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
+            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex"}}>
+            <Icons.Close/>
+          </button>
+        </div>
+
+        {/* List */}
+        <div style={{padding:"16px 20px 20px", overflowY:"auto", flex:1}}>
+          {trashedProjects.length === 0 ? (
+            <div style={{textAlign:"center", padding:"32px 0", color:C.textMuted}}>
+              <Icons.Bin style={{width:28,height:28,marginBottom:10,opacity:.4}}/>
+              <p style={{fontSize:13}}>La papelera está vacía.</p>
+            </div>
+          ) : trashedProjects.map(p => {
+            const daysAgo = Math.floor((Date.now() - new Date(p.deleted_at)) / 86400000);
+            const daysLeft = 30 - daysAgo;
+            return (
+              <div key={p.id} style={{
+                display:"flex", alignItems:"center", gap:10, padding:"11px 12px",
+                borderRadius:10, marginBottom:6, background:C.bgCard,
+                border:`1px solid ${C.border}`,
+              }}>
+                <Icons.Projects style={{width:16,height:16,flexShrink:0,color:C.textMuted}}/>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{fontSize:13, color:C.textSec, fontWeight:500,
+                    overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>
+                    {p.name}
+                  </div>
+                  <div style={{fontSize:10, color:C.textMuted, marginTop:2}}>
+                    Se elimina en {daysLeft} día{daysLeft!==1?"s":""}
+                  </div>
+                </div>
+                <div style={{display:"flex", gap:4, flexShrink:0}}>
+                  <Btn onClick={()=>onRestore(p.id)} title="Restaurar"
+                    style={{padding:"5px 8px", gap:4, fontSize:11, color:C.green}}>
+                    <Icons.Restore/> Restaurar
+                  </Btn>
+                  <Btn onClick={()=>onDeleteForever(p.id)} title="Eliminar definitivamente"
+                    style={{padding:"5px 7px", color:C.red}}>
+                    <Icons.Trash/>
+                  </Btn>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 
 const GUIDE_ELEMENTS = [
   {
@@ -1013,7 +1238,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
 // NAV SIDEBAR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail, onHelp }) {
+function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
@@ -1080,6 +1305,17 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
         onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
         onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
         <Icons.Help/>
+      </button>
+
+      {/* Tour */}
+      <button onClick={onOnboarding} title="Ver introducción"
+        style={{padding:"6px", borderRadius:8, border:"none", background:"none",
+          color:C.textFaint, cursor:"pointer", transition:"color .15s, background .15s",
+          display:"flex", alignItems:"center", justifyContent:"center", width:"100%",
+          fontSize:13}}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background=C.bgCard}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textFaint;e.currentTarget.style.background="none"}}>
+        ✦
       </button>
 
       {/* Theme toggle */}
@@ -1162,7 +1398,8 @@ function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onHelp }) 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
-  onRenameProject, scenes, characters, activeBlock, blocks, onNoteChange, stats,
+  onRenameProject, onReorderProjects, onOpenTrash,
+  scenes, characters, activeBlock, blocks, onNoteChange, stats,
   onSceneClick, searchQuery, onSearchQuery, searchResults, isMobile }) {
 
   const panelTitle = {
@@ -1185,6 +1422,7 @@ function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, 
         <PanelContent tab={tab} projects={projects} selectedId={selectedId}
           onSelectProject={onSelectProject} onNewProject={onNewProject}
           onDeleteProject={onDeleteProject} onRenameProject={onRenameProject}
+          onReorderProjects={onReorderProjects} onOpenTrash={onOpenTrash}
           scenes={scenes} characters={characters} activeBlock={activeBlock}
           blocks={blocks} onNoteChange={onNoteChange} stats={stats}
           onSceneClick={onSceneClick} searchQuery={searchQuery}
@@ -1250,7 +1488,8 @@ function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject,
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function PanelContent({ tab, projects, selectedId, onSelectProject, onNewProject,
-  onDeleteProject, onRenameProject, scenes, characters, activeBlock, blocks,
+  onDeleteProject, onRenameProject, onReorderProjects, onOpenTrash,
+  scenes, characters, activeBlock, blocks,
   onNoteChange, stats, onSceneClick, searchQuery, onSearchQuery, searchResults,
   onResultClick, isMobile }) {
   return (
@@ -1258,7 +1497,8 @@ function PanelContent({ tab, projects, selectedId, onSelectProject, onNewProject
       {tab==="projects" && (
         <ProjectsPanel projects={projects} selectedId={selectedId}
           onSelect={onSelectProject} onNew={onNewProject}
-          onDelete={onDeleteProject} onRename={onRenameProject}/>
+          onDelete={onDeleteProject} onRename={onRenameProject}
+          onReorder={onReorderProjects} onOpenTrash={onOpenTrash}/>
       )}
       {tab==="scenes" && (
         <ScenesPanel scenes={scenes} onSceneClick={onSceneClick}/>
@@ -1280,9 +1520,26 @@ function PanelContent({ tab, projects, selectedId, onSelectProject, onNewProject
 // SUB-PANELES
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete, onRename }) {
+function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete, onRename, onReorder, onOpenTrash }) {
   const [search, setSearch] = useState("");
+  const [dragOver, setDragOver] = useState(null);
+  const dragSrc = useRef(null);
   const filtered = projects.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
+
+  const handleDragStart = (e, id) => {
+    dragSrc.current = id;
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleDragOver = (e, id) => {
+    e.preventDefault();
+    if (id !== dragSrc.current) setDragOver(id);
+  };
+  const handleDrop = (e, id) => {
+    e.preventDefault();
+    if (dragSrc.current && id !== dragSrc.current) onReorder(dragSrc.current, id);
+    setDragOver(null); dragSrc.current = null;
+  };
+
   return (
     <div>
       <div style={{display:"flex", gap:6, marginBottom:12}}>
@@ -1297,24 +1554,48 @@ function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete, onRena
       {filtered.map(p => (
         <ProjectItem key={p.id} project={p} isActive={p.id===selectedId}
           onSelect={()=>onSelect(p.id)} onDelete={()=>onDelete(p.id)}
-          onRename={n=>onRename(p.id,n)}/>
+          onRename={n=>onRename(p.id,n)}
+          isDragOver={dragOver===p.id}
+          onDragStart={e=>handleDragStart(e,p.id)}
+          onDragOver={e=>handleDragOver(e,p.id)}
+          onDrop={e=>handleDrop(e,p.id)}
+          onDragEnd={()=>{setDragOver(null);dragSrc.current=null;}}
+        />
       ))}
+      {/* Papelera */}
+      <button onClick={onOpenTrash} style={{
+        display:"flex", alignItems:"center", gap:7, width:"100%",
+        marginTop:10, padding:"8px 10px", borderRadius:8, border:"none",
+        background:"none", color:C.textMuted, fontSize:12, cursor:"pointer",
+        fontFamily:"inherit", transition:"color .15s, background .15s",
+      }}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.red;e.currentTarget.style.background=`rgba(240,96,96,.07)`}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
+        <Icons.Bin style={{width:14,height:14}}/> Papelera
+      </button>
     </div>
   );
 }
 
-function ProjectItem({ project, isActive, onSelect, onDelete, onRename }) {
+function ProjectItem({ project, isActive, onSelect, onDelete, onRename, isDragOver, onDragStart, onDragOver, onDrop, onDragEnd }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
   const [hover, setHover] = useState(false);
   const commit = () => { if (name.trim()) onRename(name.trim()); else setName(project.name); setEditing(false); };
   return (
-    <div onClick={onSelect} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+    <div draggable onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd}
+      onClick={onSelect} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
       style={{padding:"10px 12px", borderRadius:9, marginBottom:4, cursor:"pointer",
         background:isActive?C.bgActive:hover?C.bgCard:"transparent",
-        border:isActive?`1px solid ${C.borderBright}`:"1px solid transparent",
-        transition:"all .12s", display:"flex", alignItems:"center", gap:8}}>
-      <Icons.Projects style={{width:18,height:18,flexShrink:0,color:isActive?C.accent:C.textMuted}}/>
+        border:isDragOver?`1.5px dashed ${C.accent}`:isActive?`1px solid ${C.borderBright}`:"1px solid transparent",
+        transition:"all .12s", display:"flex", alignItems:"center", gap:8,
+        opacity:isDragOver?.7:1}}>
+      {/* Drag handle */}
+      <div style={{color:C.textFaint, cursor:"grab", flexShrink:0, display:hover||isActive?"flex":"none",
+        alignItems:"center"}} onMouseDown={e=>e.stopPropagation()}>
+        <Icons.Drag/>
+      </div>
+      <Icons.Projects style={{width:16,height:16,flexShrink:0,color:isActive?C.accent:C.textMuted}}/>
       {editing ? (
         <input autoFocus value={name} onChange={e=>setName(e.target.value)}
           onBlur={commit} onClick={e=>e.stopPropagation()}
@@ -1330,7 +1611,7 @@ function ProjectItem({ project, isActive, onSelect, onDelete, onRename }) {
       {(hover||isActive) && !editing && (
         <div style={{display:"flex", gap:2}} onClick={e=>e.stopPropagation()}>
           <Btn onClick={()=>setEditing(true)} style={{padding:"4px 6px"}} title="Renombrar"><Icons.Pen/></Btn>
-          <Btn onClick={onDelete} style={{padding:"4px 6px"}} title="Eliminar"><Icons.Trash/></Btn>
+          <Btn onClick={onDelete} style={{padding:"4px 6px"}} title="Mover a papelera"><Icons.Trash/></Btn>
         </div>
       )}
     </div>
@@ -2121,6 +2402,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
       const { data, error } = await supabase
         .from("scripts")
         .select("id, name, blocks, updated_at")
+        .is("deleted_at", null)
         .order("updated_at", { ascending: false });
       if (!error && data) {
         if (data.length === 0) {
@@ -2189,6 +2471,16 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   const [newProjectName, setNewProjectName] = useState("");
   const [showExportModal, setShowExportModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showTrashModal, setShowTrashModal] = useState(false);
+  const [trashedProjects, setTrashedProjects] = useState([]);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    try { return !localStorage.getItem("plano-onboarding-done"); } catch { return true; }
+  });
+
+  const closeOnboarding = () => {
+    try { localStorage.setItem("plano-onboarding-done", "1"); } catch {}
+    setShowOnboarding(false);
+  };
 
   const inputRefs = useRef({});
   const editorRef = useRef(null);
@@ -2325,34 +2617,68 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
-  if (!newProjectName.trim()) return;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  const { data, error } = await supabase
-    .from("scripts")
-    .insert({ 
-      name: newProjectName.trim(), 
-      blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
-      user_id: user.id
-    })
-    .select()
-    .single();
-  if (error) { console.error("Error creando guion:", error); return; }
-  if (data) {
-    setProjects(prev => [data, ...prev]);
-    setSelectedId(data.id);
-  }
-  setNewProjectName("");
-  setNewProjectModal(false);
-};
+    if (!newProjectName.trim()) return;
+    const { data, error } = await supabase
+      .from("scripts")
+      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
+      .select()
+      .single();
+    if (!error && data) {
+      setProjects(prev => [data, ...prev]);
+      setSelectedId(data.id);
+    }
+    setNewProjectName("");
+    setNewProjectModal(false);
+  };
 
   const deleteProject = async id => {
-    if (projects.length===1) return;
-    if (!confirm("¿Eliminar este guion? Esta acción no se puede deshacer.")) return;
-    await supabase.from("scripts").delete().eq("id", id);
-    const updated = projects.filter(p=>p.id!==id);
+    if (projects.length === 1) return;
+    if (!confirm("¿Mover este guion a la papelera?")) return;
+    const now = new Date().toISOString();
+    await supabase.from("scripts").update({ deleted_at: now }).eq("id", id);
+    const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
-    if (selectedId===id) setSelectedId(updated[0].id);
+    if (selectedId === id) setSelectedId(updated[0]?.id);
+  };
+
+  const loadTrash = async () => {
+    const { data } = await supabase
+      .from("scripts")
+      .select("id, name, deleted_at")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
+      .limit(10);
+    setTrashedProjects(data || []);
+  };
+
+  const openTrash = async () => {
+    await loadTrash();
+    setShowTrashModal(true);
+  };
+
+  const restoreProject = async id => {
+    await supabase.from("scripts").update({ deleted_at: null }).eq("id", id);
+    const { data } = await supabase.from("scripts").select("id, name, blocks, updated_at").eq("id", id).single();
+    if (data) setProjects(prev => [data, ...prev]);
+    setTrashedProjects(prev => prev.filter(p => p.id !== id));
+  };
+
+  const deleteForever = async id => {
+    if (!confirm("¿Eliminar definitivamente? No se puede recuperar.")) return;
+    await supabase.from("scripts").delete().eq("id", id);
+    setTrashedProjects(prev => prev.filter(p => p.id !== id));
+  };
+
+  const reorderProjects = (srcId, dstId) => {
+    setProjects(prev => {
+      const arr = [...prev];
+      const srcIdx = arr.findIndex(p => p.id === srcId);
+      const dstIdx = arr.findIndex(p => p.id === dstId);
+      if (srcIdx < 0 || dstIdx < 0) return prev;
+      const [item] = arr.splice(srcIdx, 1);
+      arr.splice(dstIdx, 0, item);
+      return arr;
+    });
   };
 
   const renameProject = async (id, name) => {
@@ -2431,6 +2757,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     onNewProject: ()=>setNewProjectModal(true),
     onDeleteProject: deleteProject,
     onRenameProject: renameProject,
+    onReorderProjects: reorderProjects,
+    onOpenTrash: openTrash,
     scenes, characters, activeBlock:activeIndex, blocks,
     onNoteChange: updateNote, stats,
     onSceneClick: scrollToBlock,
@@ -2444,6 +2772,11 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   return (
     <>
       <InjectStyles theme={isDark?"dark":"light"}/>
+
+      {/* Onboarding */}
+      {showOnboarding && (
+        <OnboardingModal isDark={isDark} onClose={closeOnboarding}/>
+      )}
 
       {/* Modal de exportación PDF */}
       {showExportModal && (
@@ -2460,6 +2793,16 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         <HelpModal isDark={isDark} onClose={()=>setShowHelpModal(false)}/>
       )}
 
+      {/* Papelera */}
+      {showTrashModal && (
+        <TrashModal
+          trashedProjects={trashedProjects}
+          onRestore={restoreProject}
+          onDeleteForever={deleteForever}
+          onClose={()=>setShowTrashModal(false)}
+        />
+      )}
+
       <div style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .2s"}}>
 
         {/* ── DESKTOP ── */}
@@ -2467,7 +2810,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
             )}
 
             {/* Center column */}
