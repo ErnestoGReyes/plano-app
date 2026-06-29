@@ -3018,13 +3018,13 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   };
 
   const deleteProject = async id => {
-    if (projects.length === 1) return;
     if (!confirm("¿Mover este guion a la papelera?")) return;
     const now = new Date().toISOString();
     await supabase.from("scripts").update({ deleted_at: now }).eq("id", id);
     const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
-    if (selectedId === id) setSelectedId(updated[0]?.id);
+    if (updated.length === 0) setSelectedId(null);
+    else if (selectedId === id) setSelectedId(updated[0]?.id);
   };
 
   const loadTrash = async () => {
