@@ -2763,14 +2763,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         .order("updated_at", { ascending: false });
       if (!error && data) {
         if (data.length === 0) {
-          // Primer uso: crear guion de ejemplo
-          const def = DEFAULT_PROJECT();
-          const { data: created } = await supabase
-            .from("scripts")
-            .insert({ name: def.name, blocks: def.blocks })
-            .select()
-            .single();
-          if (created) { setProjects([created]); setSelectedId(created.id); }
+          // Sin guiones → mostrar pantalla de bienvenida
+          setProjects([]);
         } else {
           setProjects(data);
           setSelectedId(data[0].id);
@@ -3004,9 +2998,15 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
     if (!newProjectName.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
     const { data, error } = await supabase
       .from("scripts")
-      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
+      .insert({
+        name: newProjectName.trim(),
+        blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
+        user_id: user.id,
+      })
       .select()
       .single();
     if (!error && data) {
