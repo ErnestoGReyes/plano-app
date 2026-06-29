@@ -1,16 +1,9 @@
-// ─── PLANO SCREENWRITING — v6 ────────────────────────────────────────────────
+// ─── PLANO SCREENWRITING — v7 ────────────────────────────────────────────────
 // Celtx-inspired · Mobile-first · Undo/Redo · Búsqueda · Modo foco
-// Índice de escenas · Notas · Auto-completar · Modo día/noche · Auth Supabase
+// Índice de escenas · Notas · Auth Supabase · Historial · Importar Fountain
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { createClient } from "@supabase/supabase-js";
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SUPABASE — configuración
-// Crear un archivo .env en la raíz del proyecto con:
-//   VITE_SUPABASE_URL=https://xxxx.supabase.co
-//   VITE_SUPABASE_ANON_KEY=eyJ...
-// ═══════════════════════════════════════════════════════════════════════════════
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -154,6 +147,16 @@ const Icons = {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/>
       <circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/>
+    </svg>
+  ),
+  History: (props) => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>
+    </svg>
+  ),
+  Import: (props) => (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
     </svg>
   ),
 };
@@ -311,8 +314,355 @@ function estimatePages(blocks) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ONBOARDING — bienvenida + tour permanente
+// PARSER DE FOUNTAIN
 // ═══════════════════════════════════════════════════════════════════════════════
+
+function parseFountain(text) {
+  const blocks = [];
+  const lines = text.split("\n");
+  let i = 0;
+
+  const push = (type, text) => {
+    if (text.trim()) blocks.push({ id: uid(), type, text: text.trim(), note: "" });
+  };
+
+  while (i < lines.length) {
+    const line = lines[i].trimEnd();
+    const next = lines[i + 1]?.trimEnd() ?? "";
+    const prev = lines[i - 1]?.trimEnd() ?? "";
+
+    // Ignorar metadatos al inicio (Title:, Author:, etc.)
+    if (i === 0 && /^[A-Za-z ]+:/.test(line)) { i++; continue; }
+
+    // Línea vacía
+    if (!line.trim()) { i++; continue; }
+
+    // Encabezado de escena: INT. / EXT. / INT./EXT. o forzado con .
+    if (/^(INT|EXT|INT\.\/EXT|I\/E)[.\s]/i.test(line) || /^\.[A-Z]/.test(line)) {
+      push(T.SCENE, line.startsWith(".") ? line.slice(1) : line);
+      i++; continue;
+    }
+
+    // Transición: termina en "TO:" o es FADE IN/OUT etc., línea anterior vacía
+    if (/^(FADE|CUT|SMASH|MATCH|DISSOLVE|WIPE)/.test(line) && prev === "") {
+      push(T.TRANSITION, line);
+      i++; continue;
+    }
+
+    // Personaje: mayúsculas, línea anterior vacía, línea siguiente no vacía
+    if (line === line.toUpperCase() && line.trim().length > 0
+        && /[A-Z]/.test(line) && prev === "" && next.trim() !== ""
+        && !/^(INT|EXT)/.test(line) && !line.startsWith("!")) {
+      push(T.CHARACTER, line.replace(/\s*\(.*\)\s*$/, "").trim());
+      i++;
+      // Acotación después del personaje
+      if (lines[i]?.trim().startsWith("(")) {
+        push(T.PAREN, lines[i].trim());
+        i++;
+      }
+      // Diálogo
+      while (i < lines.length && lines[i].trim() !== "") {
+        if (lines[i].trim().startsWith("(")) push(T.PAREN, lines[i].trim());
+        else push(T.DIALOGUE, lines[i].trim());
+        i++;
+      }
+      continue;
+    }
+
+    // Acción
+    push(T.ACTION, line.startsWith("!") ? line.slice(1) : line);
+    i++;
+  }
+
+  return blocks.length > 0 ? blocks : [{ id: uid(), type: T.SCENE, text: "", note: "" }];
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODAL IMPORTAR FOUNTAIN
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function ImportFountainModal({ onImport, onClose, isDark }) {
+  const [dragging, setDragging] = useState(false);
+  const [preview, setPreview] = useState(null);
+  const [parsed, setParsed] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const fileRef = useRef();
+
+  const handleFile = file => {
+    if (!file || !file.name.endsWith(".fountain")) return;
+    setFileName(file.name.replace(".fountain", ""));
+    const reader = new FileReader();
+    reader.onload = e => {
+      const text = e.target.result;
+      const blocks = parseFountain(text);
+      setParsed(blocks);
+      const scenes = blocks.filter(b => b.type === T.SCENE).length;
+      const chars = [...new Set(blocks.filter(b => b.type === T.CHARACTER).map(b => b.text))].length;
+      setPreview({ scenes, chars, blocks: blocks.length });
+    };
+    reader.readAsText(file);
+  };
+
+  const inputStyle = {
+    width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
+    borderRadius:9, padding:"10px 14px", color:C.textPrimary, fontSize:13,
+    outline:"none", fontFamily:"inherit", boxSizing:"border-box",
+  };
+
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:500, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:16, width:"100%", maxWidth:420,
+        boxShadow:`0 24px 60px ${C.shadow}`, padding:"24px",
+      }}>
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20}}>
+          <div>
+            <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
+              Importar Fountain
+            </div>
+            <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+              Compatible con Final Draft, Highland, Celtx
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
+            cursor:"pointer", padding:"4px 6px", display:"flex"}}><Icons.Close/></button>
+        </div>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={e=>{e.preventDefault();setDragging(true)}}
+          onDragLeave={()=>setDragging(false)}
+          onDrop={e=>{e.preventDefault();setDragging(false);handleFile(e.dataTransfer.files[0])}}
+          onClick={()=>fileRef.current?.click()}
+          style={{
+            border:`2px dashed ${dragging?C.accent:C.borderBright}`,
+            borderRadius:12, padding:"32px 20px", textAlign:"center",
+            background:dragging?C.accentGlow:"transparent",
+            cursor:"pointer", transition:"all .15s", marginBottom:16,
+          }}>
+          <Icons.Import style={{width:28,height:28,color:C.textMuted,margin:"0 auto 10px"}}/>
+          <div style={{fontSize:13, color:C.textSec, fontWeight:500}}>
+            {preview ? `✓ ${fileName}.fountain` : "Arrastrá tu archivo .fountain acá"}
+          </div>
+          <div style={{fontSize:11, color:C.textMuted, marginTop:4}}>
+            {preview ? `${preview.scenes} escenas · ${preview.chars} personajes · ${preview.blocks} bloques`
+              : "o hacé click para seleccionar"}
+          </div>
+          <input ref={fileRef} type="file" accept=".fountain" style={{display:"none"}}
+            onChange={e=>handleFile(e.target.files[0])}/>
+        </div>
+
+        {preview && (
+          <>
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:11, fontWeight:600, color:C.textMuted,
+                letterSpacing:.5, textTransform:"uppercase", marginBottom:8}}>Nombre del guion</div>
+              <input value={fileName} onChange={e=>setFileName(e.target.value)}
+                style={inputStyle}
+                onFocus={e=>e.target.style.borderColor=C.accent}
+                onBlur={e=>e.target.style.borderColor=C.borderBright}/>
+            </div>
+            <button onClick={()=>onImport(parsed, fileName||"Guion importado")} style={{
+              width:"100%", padding:"12px", borderRadius:10, border:"none",
+              background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
+              cursor:"pointer", fontFamily:"inherit",
+              display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+            }}>
+              <Icons.Import/> Importar guion
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODAL HISTORIAL DE VERSIONES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
+  const [versions, setVersions] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [restoring, setRestoring] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from("script_versions")
+        .select("id, created_at, blocks")
+        .eq("script_id", scriptId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setVersions(data || []);
+      setLoading(false);
+    }
+    load();
+  }, [scriptId]);
+
+  const fmt = dt => {
+    const d = new Date(dt);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 60000);
+    if (diff < 1) return "Ahora mismo";
+    if (diff < 60) return `Hace ${diff} min`;
+    if (diff < 1440) return `Hace ${Math.floor(diff/60)}h`;
+    return d.toLocaleDateString("es-UY", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
+  };
+
+  return (
+    <div className="overlay-in" onClick={onClose} style={{
+      position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
+      display:"flex", alignItems:"center", justifyContent:"center",
+      zIndex:500, padding:16,
+    }}>
+      <div onClick={e=>e.stopPropagation()} style={{
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`,
+        borderRadius:16, width:"100%", maxWidth:400,
+        boxShadow:`0 24px 60px ${C.shadow}`,
+        maxHeight:"80dvh", display:"flex", flexDirection:"column",
+      }}>
+        <div style={{padding:"20px 20px 0", display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexShrink:0}}>
+          <div>
+            <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
+              Historial
+            </div>
+            <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+              {projectName} · últimas {versions.length} versiones
+            </div>
+          </div>
+          <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
+            cursor:"pointer", padding:"4px 6px", display:"flex"}}><Icons.Close/></button>
+        </div>
+
+        <div style={{padding:"14px 20px 20px", overflowY:"auto", flex:1}}>
+          {loading ? (
+            <div style={{textAlign:"center", padding:"32px 0", color:C.textMuted, fontSize:13}}>
+              Cargando historial…
+            </div>
+          ) : versions.length === 0 ? (
+            <div style={{textAlign:"center", padding:"32px 0", color:C.textMuted}}>
+              <Icons.History style={{width:28,height:28,marginBottom:10,opacity:.4}}/>
+              <p style={{fontSize:13}}>Todavía no hay versiones guardadas.</p>
+              <p style={{fontSize:11, marginTop:6}}>Se guarda una versión cada 5 minutos mientras escribís.</p>
+            </div>
+          ) : versions.map(v => {
+            const scenes = v.blocks.filter(b=>b.type===T.SCENE).length;
+            const words = v.blocks.map(b=>b.text).join(" ").split(/\s+/).filter(Boolean).length;
+            return (
+              <div key={v.id} style={{
+                display:"flex", alignItems:"center", gap:10, padding:"11px 12px",
+                borderRadius:10, marginBottom:6, background:C.bgCard,
+                border:`1px solid ${C.border}`,
+              }}>
+                <Icons.History style={{width:14,height:14,flexShrink:0,color:C.textMuted}}/>
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{fontSize:13, color:C.textSec, fontWeight:500}}>{fmt(v.created_at)}</div>
+                  <div style={{fontSize:10, color:C.textMuted, marginTop:2}}>
+                    {scenes} escenas · {words} palabras
+                  </div>
+                </div>
+                <Btn onClick={async()=>{
+                  if(!confirm("¿Restaurar esta versión? Se reemplazará el contenido actual.")) return;
+                  setRestoring(v.id);
+                  await onRestore(v.blocks);
+                  setRestoring(null);
+                  onClose();
+                }} style={{padding:"5px 10px", fontSize:11, gap:4,
+                  opacity:restoring===v.id?.6:1}}>
+                  <Icons.Restore/>{restoring===v.id?"…":"Restaurar"}
+                </Btn>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PANTALLA DE BIENVENIDA (estado vacío mejorado)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function WelcomeScreen({ onNew, onImport, isDark }) {
+  return (
+    <div style={{
+      flex:1, display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      background:C.bgEditor, padding:"40px 24px",
+    }}>
+      {/* Logo grande */}
+      <svg width="90" height="69" viewBox="0 0 52 40" fill="none" style={{marginBottom:28}}>
+        <rect width="52" height="40" rx="7"
+          fill={isDark?"#0E1015":"#E8EAF0"}
+          stroke={isDark?"#252840":"#C4CBDE"} strokeWidth="0.75"/>
+        <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+        <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace"
+          fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"}
+          textAnchor="middle" letterSpacing="2">PLANO</text>
+        <rect x="10" y="28" width="30" height="1.5" rx="0.75"
+          fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
+        <rect x="38.5" y="14" width="2" height="14" rx="1"
+          fill={isDark?"#5B8DEF":"#4A7DE8"}>
+          <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
+        </rect>
+      </svg>
+
+      <h1 style={{fontFamily:"'Courier Prime',monospace", fontSize:22, fontWeight:700,
+        color:C.textPrimary, margin:"0 0 8px", textAlign:"center", letterSpacing:-.3}}>
+        Bienvenido a Plano
+      </h1>
+      <p style={{fontSize:14, color:C.textMuted, margin:"0 0 36px", textAlign:"center",
+        maxWidth:340, lineHeight:1.6}}>
+        Tu espacio para escribir guiones profesionales.<br/>
+        Cada historia empieza con una primera línea.
+      </p>
+
+      <div style={{display:"flex", flexDirection:"column", gap:10, width:"100%", maxWidth:280}}>
+        <button onClick={onNew} style={{
+          padding:"14px 20px", borderRadius:12, border:"none",
+          background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
+          cursor:"pointer", fontFamily:"'Courier Prime',monospace",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+          boxShadow:`0 4px 16px rgba(91,141,239,0.3)`,
+          transition:"opacity .15s",
+        }}
+          onMouseEnter={e=>e.currentTarget.style.opacity=".88"}
+          onMouseLeave={e=>e.currentTarget.style.opacity="1"}>
+          <Icons.Plus style={{width:18,height:18}}/> Nuevo guion
+        </button>
+        <button onClick={onImport} style={{
+          padding:"13px 20px", borderRadius:12, border:`1.5px solid ${C.borderBright}`,
+          background:"none", color:C.textSec, fontSize:13, fontWeight:500,
+          cursor:"pointer", fontFamily:"inherit",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+          transition:"border-color .15s, color .15s",
+        }}
+          onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.color=C.accent}}
+          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.borderBright;e.currentTarget.style.color=C.textSec}}>
+          <Icons.Import/> Importar .fountain
+        </button>
+      </div>
+
+      <p style={{marginTop:32, fontSize:11, color:C.textFaint, textAlign:"center"}}>
+        1 página = ~1 minuto de película
+      </p>
+    </div>
+  );
+}
+
+
 
 function OnboardingModal({ onClose, isDark }) {
   const [step, setStep] = useState(0);
@@ -1824,19 +2174,19 @@ function SearchPanel({ query, onQuery, results, onResultClick, isMobile }) {
 // TOOLBAR SUPERIOR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, projectName,
-  saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
+function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImport, onHistory,
+  projectName, saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
   const types = [
     {type:T.SCENE,      label:"Escena",    short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     label:"Acción",    short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  label:"Personaje", short:"PER", color:C.green},
-    {type:T.PAREN,      label:"Acotación",   short:"ACO", color:"#F4A96D"},
+    {type:T.PAREN,      label:"Acotación", short:"ACO", color:"#F4A96D"},
     {type:T.DIALOGUE,   label:"Diálogo",   short:"DIA", color:C.accent},
     {type:T.TRANSITION, label:"Transición",short:"TRA", color:C.purple},
   ];
   const [showExport, setShowExport] = useState(false);
 
-  if (isMobile) return null; // mobile tiene su propio header
+  if (isMobile) return null;
 
   return (
     <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
@@ -1864,14 +2214,12 @@ function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, project
 
       <div style={{flex:1}}/>
 
-      {/* Saving indicator */}
       {saving && <span className="saving" style={{display:"flex",alignItems:"center",gap:4,fontSize:10, color:C.textMuted, marginRight:4}}><Icons.Saving/> Guardando</span>}
 
       <Btn onClick={onUndo} disabled={!canUndo} title="Deshacer (Ctrl+Z)" style={{padding:"5px 7px"}}><Icons.Undo/></Btn>
       <Btn onClick={onRedo} disabled={!canRedo} title="Rehacer (Ctrl+Y)" style={{padding:"5px 7px"}}><Icons.Redo/></Btn>
-
-      <Btn onClick={onFocusMode} title="Modo foco"
-        style={{padding:"5px 7px", color:focusMode?C.accent:C.textMuted}}><Icons.Focus/></Btn>
+      <Btn onClick={onFocusMode} title="Modo foco" style={{padding:"5px 7px", color:focusMode?C.accent:C.textMuted}}><Icons.Focus/></Btn>
+      <Btn onClick={onHistory} title="Historial de versiones" style={{padding:"5px 7px", color:C.textMuted}}><Icons.History/></Btn>
 
       <div style={{position:"relative"}}>
         <Btn onClick={()=>setShowExport(v=>!v)} variant="outline"
@@ -1881,10 +2229,11 @@ function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, project
         {showExport && (
           <div style={{position:"absolute", right:0, top:"calc(100% + 6px)", background:C.bgPanel,
             border:`1px solid ${C.borderBright}`, borderRadius:9, padding:6,
-            zIndex:300, minWidth:180, boxShadow:`0 12px 32px ${C.shadow}`}}>
+            zIndex:300, minWidth:200, boxShadow:`0 12px 32px ${C.shadow}`}}>
             {[
               {label:"PDF (impresión)", Icon:Icons.PDF, fn:()=>{onExport();setShowExport(false);}},
               {label:"Fountain (.fountain)", Icon:Icons.Fountain, fn:()=>{onExportFountain();setShowExport(false);}},
+              {label:"Importar .fountain", Icon:Icons.Import, fn:()=>{onImport();setShowExport(false);}},
             ].map(item => (
               <button key={item.label} onClick={item.fn} style={{
                 display:"flex", alignItems:"center", gap:8, width:"100%", padding:"9px 12px",
@@ -2452,6 +2801,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
   // ── Autosave a Supabase ────────────────────────────────────────────────────
   const [saving, setSaving] = useState(false);
+  const lastVersionSave = useRef(0);
+
   useEffect(() => {
     if (!selectedId || loadingProjects) return;
     setSaving(true);
@@ -2463,6 +2814,31 @@ function PlanoApp({ session, isDark, toggleTheme }) {
           .from("scripts")
           .update({ blocks: p.blocks, updated_at: new Date().toISOString() })
           .eq("id", selectedId);
+
+        // Guardar versión cada 5 minutos
+        const now = Date.now();
+        if (now - lastVersionSave.current > 5 * 60 * 1000) {
+          lastVersionSave.current = now;
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            await supabase.from("script_versions").insert({
+              script_id: selectedId,
+              user_id: user.id,
+              blocks: p.blocks,
+            });
+            // Mantener solo las últimas 20 versiones por guion
+            const { data: old } = await supabase
+              .from("script_versions")
+              .select("id, created_at")
+              .eq("script_id", selectedId)
+              .order("created_at", { ascending: false })
+              .range(20, 100);
+            if (old?.length) {
+              await supabase.from("script_versions")
+                .delete().in("id", old.map(v=>v.id));
+            }
+          }
+        }
       }
       setSaving(false);
     }, 1000);
@@ -2480,6 +2856,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   const [showExportModal, setShowExportModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showTrashModal, setShowTrashModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [trashedProjects, setTrashedProjects] = useState([]);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try { return !localStorage.getItem("plano-onboarding-done"); } catch { return true; }
@@ -2625,25 +3003,19 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
   // ── Proyectos CRUD ─────────────────────────────────────────────────────────
   const createProject = async () => {
-  if (!newProjectName.trim()) return;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
-  const { data, error } = await supabase
-    .from("scripts")
-    .insert({ 
-      name: newProjectName.trim(), 
-      blocks: [{id:uid(), type:T.SCENE, text:"", note:""}],
-      user_id: user.id
-    })
-    .select()
-    .single();
-  if (!error && data) {
-    setProjects(prev => [data, ...prev]);
-    setSelectedId(data.id);
-  }
-  setNewProjectName("");
-  setNewProjectModal(false);
-};
+    if (!newProjectName.trim()) return;
+    const { data, error } = await supabase
+      .from("scripts")
+      .insert({ name: newProjectName.trim(), blocks: [{id:uid(), type:T.SCENE, text:"", note:""}] })
+      .select()
+      .single();
+    if (!error && data) {
+      setProjects(prev => [data, ...prev]);
+      setSelectedId(data.id);
+    }
+    setNewProjectName("");
+    setNewProjectModal(false);
+  };
 
   const deleteProject = async id => {
     if (projects.length === 1) return;
@@ -2704,6 +3076,30 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     await supabase.auth.signOut();
   };
 
+  const importProject = async (blocks, name) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("scripts")
+      .insert({ name, blocks, user_id: user.id })
+      .select().single();
+    if (!error && data) {
+      setProjects(prev => [data, ...prev]);
+      setSelectedId(data.id);
+    }
+    setShowImportModal(false);
+  };
+
+  const restoreVersion = async (blocks) => {
+    updateBlocks(blocks);
+    setProjects(prev => prev.map(p =>
+      p.id===selectedId ? {...p, blocks} : p
+    ));
+    await supabase.from("scripts")
+      .update({ blocks, updated_at: new Date().toISOString() })
+      .eq("id", selectedId);
+  };
+
   // ── Render ─────────────────────────────────────────────────────────────────
 
   const activeTab = isMobile ? mobileTab : navTab;
@@ -2713,8 +3109,23 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
       background:C.bgEditor, color:C.textMuted, fontSize:13,
       fontFamily:"'Courier Prime',monospace", letterSpacing:2}}>
-      Cargando guiones…
+      <div style={{textAlign:"center"}}>
+        <svg width="52" height="40" viewBox="0 0 52 40" fill="none" style={{marginBottom:16,opacity:.5}}>
+          <rect width="52" height="40" rx="7" fill={C.bgCard} stroke={C.border} strokeWidth="0.75"/>
+          <rect x="3" y="5" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="5" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={C.bgActive}/>
+        </svg>
+        <div style={{letterSpacing:3}}>CARGANDO</div>
+      </div>
     </div>
+  ) : projects.length === 0 ? (
+    <WelcomeScreen isDark={isDark}
+      onNew={()=>setNewProjectModal(true)}
+      onImport={()=>setShowImportModal(true)}/>
   ) : (
     <div ref={editorRef} style={{
       flex:1, overflowY:"auto",
@@ -2794,12 +3205,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
       {/* Modal de exportación PDF */}
       {showExportModal && (
-        <ExportPDFModal
-          blocks={blocks}
-          projectName={project?.name||"Guion"}
-          isDark={isDark}
-          onClose={()=>setShowExportModal(false)}
-        />
+        <ExportPDFModal blocks={blocks} projectName={project?.name||"Guion"}
+          isDark={isDark} onClose={()=>setShowExportModal(false)}/>
       )}
 
       {/* Modal de ayuda */}
@@ -2809,12 +3216,25 @@ function PlanoApp({ session, isDark, toggleTheme }) {
 
       {/* Papelera */}
       {showTrashModal && (
-        <TrashModal
-          trashedProjects={trashedProjects}
-          onRestore={restoreProject}
-          onDeleteForever={deleteForever}
-          onClose={()=>setShowTrashModal(false)}
-        />
+        <TrashModal trashedProjects={trashedProjects}
+          onRestore={restoreProject} onDeleteForever={deleteForever}
+          onClose={()=>setShowTrashModal(false)}/>
+      )}
+
+      {/* Importar Fountain */}
+      {showImportModal && (
+        <ImportFountainModal isDark={isDark}
+          onImport={importProject}
+          onClose={()=>setShowImportModal(false)}/>
+      )}
+
+      {/* Historial de versiones */}
+      {showHistoryModal && (
+        <HistoryModal
+          scriptId={selectedId}
+          projectName={project?.name||"Guion"}
+          onRestore={restoreVersion}
+          onClose={()=>setShowHistoryModal(false)}/>
       )}
 
       <div style={{display:"flex", height:"100dvh", overflow:"hidden", background:C.bgApp, transition:"background .2s"}}>
@@ -2836,6 +3256,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                     onTypeChange={changeType}
                     onExport={()=>setShowExportModal(true)}
                     onExportFountain={()=>exportToFountain(blocks, project?.name||"Guion")}
+                    onImport={()=>setShowImportModal(true)}
+                    onHistory={()=>setShowHistoryModal(true)}
                     projectName={project?.name} saving={saving}
                     canUndo={canUndo} canRedo={canRedo} onUndo={undo} onRedo={redo}
                     focusMode={focusMode} onFocusMode={()=>setFocusMode(v=>!v)}
