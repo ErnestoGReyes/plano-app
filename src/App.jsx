@@ -175,61 +175,62 @@ const T = {
 };
 
 const CHARACTER_PALETTE = [
-  "#60A5FA","#34D399","#FBBF24","#A78BFA","#F87171",
-  "#38BDF8","#FB923C","#E879F9","#4ADE80","#F472B6",
+  "#C0A060","#A07850","#D4B870","#8B6A40","#E8C880",
+  "#B89050","#F0D890","#9A7840","#C8A860","#7A5830",
 ];
 
+// ── NOIR OSCURO — negro total, dorado ────────────────────────────────────────
 const DARK = {
-  bgApp:        "#12141A",
-  bgSidebar:    "#0E1015",
-  bgEditor:     "#181A22",
-  bgPanel:      "#14161D",
-  bgCard:       "#1C1F2B",
-  bgCardHover:  "#232640",
-  bgActive:     "#252840",
-  border:       "#252840",
-  borderBright: "#353A55",
-  accent:       "#5B8DEF",
-  accentGlow:   "rgba(91,141,239,0.15)",
-  accentWarm:   "#E8834A",
-  green:        "#3FCA8C",
-  purple:       "#9B72F0",
-  yellow:       "#F5C842",
-  red:          "#F06060",
-  textPrimary:  "#E4E8F0",
-  textSec:      "#8A95B0",
-  textMuted:    "#5A6480",
-  textFaint:    "#2D3250",
-  white:        "#FFFFFF",
-  shadow:       "rgba(0,0,0,0.6)",
+  bgApp:        "#0A0909",
+  bgSidebar:    "#080808",
+  bgEditor:     "#0E0D0C",
+  bgPanel:      "#0A0909",
+  bgCard:       "#141210",
+  bgCardHover:  "#1C1916",
+  bgActive:     "#1E1A14",
+  border:       "#1E1A14",
+  borderBright: "#2A2520",
+  accent:       "#C0A060",   // dorado
+  accentGlow:   "rgba(192,160,96,0.12)",
+  accentWarm:   "#D4B870",   // dorado claro
+  green:        "#7A9A60",   // verde oliva
+  purple:       "#8A7090",   // violeta apagado
+  yellow:       "#D4B060",   // ámbar
+  red:          "#A04040",   // rojo oscuro
+  textPrimary:  "#E8E0D0",   // crema cálido
+  textSec:      "#8A8070",   // gris cálido
+  textMuted:    "#4A4438",   // muted cálido
+  textFaint:    "#252018",   // casi negro cálido
+  white:        "#F0E8D8",
+  shadow:       "rgba(0,0,0,0.85)",
 };
 
+// ── NOIR DÍA — papel, tinta, dorado oscuro ───────────────────────────────────
 const LIGHT = {
-  bgApp:        "#F0F2F7",
-  bgSidebar:    "#E8EAF0",
-  bgEditor:     "#FAFBFD",
-  bgPanel:      "#EDF0F7",
-  bgCard:       "#FFFFFF",
-  bgCardHover:  "#F5F7FC",
-  bgActive:     "#EBF0FD",
-  border:       "#DDE1EC",
-  borderBright: "#C4CBDE",
-  accent:       "#4A7DE8",
-  accentGlow:   "rgba(74,125,232,0.12)",
-  accentWarm:   "#D4703A",
-  green:        "#27A870",
-  purple:       "#7C5CC4",
-  yellow:       "#D4A80E",
-  red:          "#D94F4F",
-  textPrimary:  "#1A1F2E",
-  textSec:      "#4A5270",
-  textMuted:    "#8A92A8",
-  textFaint:    "#C0C6D8",
-  white:        "#FFFFFF",
-  shadow:       "rgba(0,0,0,0.12)",
+  bgApp:        "#F2EDE4",   // papel envejecido
+  bgSidebar:    "#EBE4D8",
+  bgEditor:     "#F8F4EC",   // página en blanco cálida
+  bgPanel:      "#EDE6DA",
+  bgCard:       "#F8F4EC",
+  bgCardHover:  "#F2EDE4",
+  bgActive:     "#EDE0C8",
+  border:       "#D8CEB8",
+  borderBright: "#C4B898",
+  accent:       "#8B6820",   // dorado oscuro sobre claro
+  accentGlow:   "rgba(139,104,32,0.10)",
+  accentWarm:   "#A07828",
+  green:        "#4A6830",
+  purple:       "#604858",
+  yellow:       "#987020",
+  red:          "#803030",
+  textPrimary:  "#1A1510",   // tinta casi negra
+  textSec:      "#4A4030",   // tinta media
+  textMuted:    "#8A7860",   // tinta suave
+  textFaint:    "#C8B898",   // muy suave
+  white:        "#F8F4EC",
+  shadow:       "rgba(0,0,0,0.15)",
 };
 
-// C es un proxy mutable — se actualiza con setTheme
 let C = { ...DARK };
 
 function hexToRgb(hex) {
@@ -282,7 +283,7 @@ function typeTooltip(type) {
 
 function typeColor(type) {
   return { [T.SCENE]:C.accentWarm,[T.ACTION]:C.textSec,[T.CHARACTER]:C.green,
-           [T.PAREN]:"#F4A96D",[T.DIALOGUE]:C.accent,[T.TRANSITION]:C.purple }[type] || C.textSec;
+           [T.PAREN]:"#C0A060",[T.DIALOGUE]:C.accent,[T.TRANSITION]:C.purple }[type] || C.textSec;
 }
 
 function extractCharacters(blocks) {
@@ -600,21 +601,21 @@ function WelcomeScreen({ onNew, onImport, isDark }) {
       {/* Logo grande */}
       <svg width="90" height="69" viewBox="0 0 52 40" fill="none" style={{marginBottom:28}}>
         <rect width="52" height="40" rx="7"
-          fill={isDark?"#0E1015":"#E8EAF0"}
-          stroke={isDark?"#252840":"#C4CBDE"} strokeWidth="0.75"/>
-        <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          fill={isDark?"#080808":"#EBE4D8"}
+          stroke={isDark?"#2A2520":"#C4B898"} strokeWidth="0.75"/>
+        <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
         <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace"
-          fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"}
+          fontSize="13" fontWeight="700" fill={isDark?"#E8E0D0":"#1A1510"}
           textAnchor="middle" letterSpacing="2">PLANO</text>
         <rect x="10" y="28" width="30" height="1.5" rx="0.75"
-          fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
+          fill={isDark?"#C0A060":"#8B6820"} opacity="0.9"/>
         <rect x="38.5" y="14" width="2" height="14" rx="1"
-          fill={isDark?"#5B8DEF":"#4A7DE8"}>
+          fill={isDark?"#C0A060":"#8B6820"}>
           <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
         </rect>
       </svg>
@@ -670,15 +671,15 @@ function OnboardingModal({ onClose, isDark }) {
   const steps = [
     {
       icon: <svg width="40" height="31" viewBox="0 0 52 40" fill="none">
-        <rect width="52" height="40" rx="7" fill={isDark?"#0E1015":"#E8EAF0"} stroke={isDark?"#252840":"#C4CBDE"} strokeWidth="0.75"/>
-        <rect x="3" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-        <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace" fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"} textAnchor="middle" letterSpacing="2">PLANO</text>
-        <rect x="10" y="28" width="30" height="1.5" rx="0.75" fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
+        <rect width="52" height="40" rx="7" fill={isDark?"#080808":"#EBE4D8"} stroke={isDark?"#2A2520":"#C4B898"} strokeWidth="0.75"/>
+        <rect x="3" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+        <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace" fontSize="13" fontWeight="700" fill={isDark?"#E8E0D0":"#1A1510"} textAnchor="middle" letterSpacing="2">PLANO</text>
+        <rect x="10" y="28" width="30" height="1.5" rx="0.75" fill={isDark?"#C0A060":"#8B6820"} opacity="0.9"/>
       </svg>,
       title: "Bienvenido a Plano",
       desc: "Tu herramienta para escribir guiones profesionales. Guardado automático en la nube, exportación en formato Hollywood y europeo, y todo lo que necesitás para llevar tu historia a la pantalla.",
@@ -885,7 +886,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.SCENE,
     name: "Encabezado de escena",
-    color: "#5B8DEF",
+    color: "#C0A060",
     example: "INT. COCINA DE MARIO - DÍA",
     desc: "Indica dónde y cuándo ocurre la escena. Siempre en mayúsculas. Empieza con INT. (interior) o EXT. (exterior), seguido del lugar y el momento del día.",
     tip: "Cada vez que cambia el lugar o el tiempo, es una nueva escena.",
@@ -893,7 +894,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.ACTION,
     name: "Acción",
-    color: "#E4E8F0",
+    color: "#E8E0D0",
     example: "Mario entra a la cocina y abre la heladera. Encuentra una nota pegada en la puerta.",
     desc: "Describe lo que se ve en pantalla: movimientos, ambientes, objetos importantes, reacciones físicas. Se escribe en presente y en tercera persona.",
     tip: "Sé visual y conciso. Si no se puede filmar, no va acá.",
@@ -901,7 +902,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.CHARACTER,
     name: "Personaje",
-    color: "#3FCA8C",
+    color: "#7A9A60",
     example: "MARIO",
     desc: "El nombre del personaje que va a hablar, siempre en mayúsculas y centrado. Puede incluir una aclaración entre paréntesis, como (V.O.) para voz en off o (O.S.) para fuera de campo.",
     tip: "Solo aparece inmediatamente antes del diálogo.",
@@ -909,7 +910,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.PAREN,
     name: "Acotación",
-    color: "#F4A96D",
+    color: "#C0A060",
     example: "(susurrando, sin mirarlo)",
     desc: "Una indicación breve entre paréntesis sobre cómo se dice el diálogo o qué hace el personaje mientras habla. Va entre el nombre del personaje y el diálogo.",
     tip: "Usala con moderación — si el diálogo es bueno, no debería necesitar instrucciones.",
@@ -917,7 +918,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.DIALOGUE,
     name: "Diálogo",
-    color: "#5B8DEF",
+    color: "#C0A060",
     example: "No sé quién dejó esto, pero alguien estuvo acá.",
     desc: "Las palabras exactas que dice el personaje. Va centrado y con márgenes más angostos que la acción, para diferenciarse visualmente en la página.",
     tip: "El diálogo debe sonar natural al leerlo en voz alta.",
@@ -925,7 +926,7 @@ const GUIDE_ELEMENTS = [
   {
     type: T.TRANSITION,
     name: "Transición",
-    color: "#9B72F0",
+    color: "#8A7090",
     example: "CORTE A:",
     desc: "Indica cómo se pasa de una escena a la siguiente. Los más comunes son CORTE A:, FUNDIDO A NEGRO., y FUNDIDO DESDE NEGRO. Van alineados a la derecha.",
     tip: "En el cine moderno se usan poco — el corte directo es el default.",
@@ -972,7 +973,7 @@ function HelpModal({ onClose, isDark }) {
               padding:"6px 12px", borderRadius:20, border:"none", cursor:"pointer",
               fontSize:11, fontWeight:600, whiteSpace:"nowrap", transition:"all .15s",
               background: active===i ? g.color : C.bgCard,
-              color: active===i ? (isDark?"#12141A":"#fff") : C.textMuted,
+              color: active===i ? (isDark?"#0A0909":"#fff") : C.textMuted,
               fontFamily:"inherit",
             }}>
               {g.name}
@@ -1474,16 +1475,16 @@ function InjectStyles({ theme }) {
 
     // Favicon SVG minimalista: tira de película
     const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-      <rect width="32" height="32" rx="6" fill="#12141A"/>
-      <rect x="2" y="4" width="4" height="5" rx="1" fill="#252840"/>
-      <rect x="2" y="14" width="4" height="5" rx="1" fill="#252840"/>
-      <rect x="2" y="23" width="4" height="5" rx="1" fill="#252840"/>
-      <rect x="26" y="4" width="4" height="5" rx="1" fill="#252840"/>
-      <rect x="26" y="14" width="4" height="5" rx="1" fill="#252840"/>
-      <rect x="26" y="23" width="4" height="5" rx="1" fill="#252840"/>
+      <rect width="32" height="32" rx="6" fill="#0A0909"/>
+      <rect x="2" y="4" width="4" height="5" rx="1" fill="#2A2520"/>
+      <rect x="2" y="14" width="4" height="5" rx="1" fill="#2A2520"/>
+      <rect x="2" y="23" width="4" height="5" rx="1" fill="#2A2520"/>
+      <rect x="26" y="4" width="4" height="5" rx="1" fill="#2A2520"/>
+      <rect x="26" y="14" width="4" height="5" rx="1" fill="#2A2520"/>
+      <rect x="26" y="23" width="4" height="5" rx="1" fill="#2A2520"/>
       <text x="16" y="20" font-family="'Courier New',monospace" font-size="10" font-weight="700"
-        fill="#E4E8F0" text-anchor="middle" letter-spacing="0.5">P</text>
-      <rect x="8" y="22" width="16" height="1.5" rx="0.75" fill="#5B8DEF"/>
+        fill="#E8E0D0" text-anchor="middle" letter-spacing="0.5">P</text>
+      <rect x="8" y="22" width="16" height="1.5" rx="0.75" fill="#C0A060"/>
     </svg>`;
     const faviconUrl = "data:image/svg+xml," + encodeURIComponent(faviconSvg);
     let link = document.querySelector("link[rel~='icon']");
@@ -1618,16 +1619,16 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
         <svg width="52" height="40" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Fondo */}
           <rect width="52" height="40" rx="7"
-            fill={isDark ? "#0E1015" : "#E8EAF0"}
-            stroke={isDark ? "#252840" : "#C4CBDE"} strokeWidth="0.75"/>
+            fill={isDark ? "#080808" : "#EBE4D8"}
+            stroke={isDark ? "#2A2520" : "#C4B898"} strokeWidth="0.75"/>
           {/* Perforaciones izquierda */}
-          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
           {/* Perforaciones derecha */}
-          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
           {/* Texto PLANO */}
           <text x="26" y="24"
             fontFamily="'Courier Prime','Courier New',monospace"
@@ -1636,10 +1637,10 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
             textAnchor="middle" letterSpacing="2">PLANO</text>
           {/* Línea de cursor */}
           <rect x="10" y="28" width="30" height="1.5" rx="0.75"
-            fill={isDark ? "#5B8DEF" : "#4A7DE8"} opacity="0.9"/>
+            fill={isDark ? "#C0A060" : "#8B6820"} opacity="0.9"/>
           {/* Cursor parpadeante */}
           <rect x="38.5" y="14" width="2" height="14" rx="1"
-            fill={isDark ? "#5B8DEF" : "#4A7DE8"}>
+            fill={isDark ? "#C0A060" : "#8B6820"}>
             <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
           </rect>
         </svg>
@@ -2180,7 +2181,7 @@ function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImpor
     {type:T.SCENE,      label:"Escena",    short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     label:"Acción",    short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  label:"Personaje", short:"PER", color:C.green},
-    {type:T.PAREN,      label:"Acotación", short:"ACO", color:"#F4A96D"},
+    {type:T.PAREN,      label:"Acotación", short:"ACO", color:"#C0A060"},
     {type:T.DIALOGUE,   label:"Diálogo",   short:"DIA", color:C.accent},
     {type:T.TRANSITION, label:"Transición",short:"TRA", color:C.purple},
   ];
@@ -2262,7 +2263,7 @@ function MobileEditorHeader({ projectName, words, pages, scenes, saving,
     {type:T.SCENE,      short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  short:"PER", color:C.green},
-    {type:T.PAREN,      short:"ACO", color:"#F4A96D"},
+    {type:T.PAREN,      short:"ACO", color:"#C0A060"},
     {type:T.DIALOGUE,   short:"DIA", color:C.accent},
     {type:T.TRANSITION, short:"TRA", color:C.purple},
   ];
@@ -2376,7 +2377,7 @@ function ScriptBlock({ block, index, isActive, characterColors, onUpdate, onFocu
     [T.SCENE]:      {...base, fontWeight:700, color:C.accentWarm, textTransform:"uppercase", letterSpacing:.5},
     [T.ACTION]:     {...base, color:"#C5D0E6"},
     [T.CHARACTER]:  {...base, textAlign:"center", fontWeight:700, textTransform:"uppercase", color},
-    [T.PAREN]:      {...base, paddingLeft:isMobile?"18%":"26%", paddingRight:isMobile?"18%":"26%", color:"#F4A96D", fontStyle:"italic"},
+    [T.PAREN]:      {...base, paddingLeft:isMobile?"18%":"26%", paddingRight:isMobile?"18%":"26%", color:"#C0A060", fontStyle:"italic"},
     [T.DIALOGUE]:   {...base, paddingLeft:isMobile?"10%":"18%", paddingRight:isMobile?"10%":"18%", color:C.textPrimary},
     [T.TRANSITION]: {...base, textAlign:"right", fontWeight:700, textTransform:"uppercase", color:C.purple},
   };
@@ -2555,20 +2556,20 @@ function AuthScreen({ isDark, onToggleTheme }) {
       <div style={{marginBottom:32}}>
         <svg width="80" height="62" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="52" height="40" rx="7"
-            fill={isDark ? "#0E1015" : "#E8EAF0"}
-            stroke={isDark ? "#252840" : "#C4CBDE"} strokeWidth="0.75"/>
-          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
-          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E2235":"#C4CBDE"}/>
+            fill={isDark ? "#080808" : "#EBE4D8"}
+            stroke={isDark ? "#2A2520" : "#C4B898"} strokeWidth="0.75"/>
+          <rect x="3" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="44" y="5"  width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+          <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
           <text x="26" y="24" fontFamily="'Courier Prime','Courier New',monospace"
-            fontSize="13" fontWeight="700" fill={isDark?"#E4E8F0":"#1A1F2E"}
+            fontSize="13" fontWeight="700" fill={isDark?"#E8E0D0":"#1A1510"}
             textAnchor="middle" letterSpacing="2">PLANO</text>
           <rect x="10" y="28" width="30" height="1.5" rx="0.75"
-            fill={isDark?"#5B8DEF":"#4A7DE8"} opacity="0.9"/>
-          <rect x="38.5" y="14" width="2" height="14" rx="1" fill={isDark?"#5B8DEF":"#4A7DE8"}>
+            fill={isDark?"#C0A060":"#8B6820"} opacity="0.9"/>
+          <rect x="38.5" y="14" width="2" height="14" rx="1" fill={isDark?"#C0A060":"#8B6820"}>
             <animate attributeName="opacity" values="1;0;1" dur="1.1s" repeatCount="indefinite"/>
           </rect>
         </svg>
