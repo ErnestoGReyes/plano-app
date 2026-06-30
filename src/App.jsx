@@ -3801,6 +3801,13 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   const activeTab = isMobile ? mobileTab : navTab;
   const showEditor = activeTab==="editor" || !isMobile;
 
+  // Compensar el desbalance visual entre el sidebar de íconos (64px) y el panel
+  // derecho de Escenas (200px) / panel auxiliar izquierdo (240px), para que el
+  // guion se vea centrado en la pantalla completa y no solo en el espacio que le queda.
+  const leftPanelsWidth = focusMode ? 0 : 64 + (navTab!=="editor" && navTab!=="corkboard" ? 240 : 0);
+  const rightPanelsWidth = focusMode || navTab==="corkboard" ? 0 : 200;
+  const editorCenterOffset = isMobile || focusMode ? 0 : rightPanelsWidth - leftPanelsWidth;
+
   const editorContent = loadError ? (
     <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
       background:C.bgEditor, padding:24}}>
@@ -3855,6 +3862,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8,
         padding:"36px 64px 48px",
         boxShadow:`0 2px 0 rgba(0,0,0,.4), 0 8px 32px ${C.shadow}`,
+        marginLeft:editorCenterOffset, transition:"margin-left .2s",
       }}>
         {!isMobile && !focusMode && (
           <div style={{position:"relative", marginLeft:-64}}>
