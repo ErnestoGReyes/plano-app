@@ -3011,6 +3011,12 @@ export default function App() {
   }, [isDark]);
   const toggleTheme = useCallback(() => setIsDark(v => !v), []);
 
+  // ── Sin sesión → landing o login ───────────────────────────────────────────
+  // (declarado ANTES de cualquier return condicional, para no violar las reglas de los hooks)
+  const [showLanding, setShowLanding] = useState(() => {
+    try { return sessionStorage.getItem("plano-skip-landing") !== "1"; } catch { return true; }
+  });
+
   // ── Cargando sesión ────────────────────────────────────────────────────────
   if (session === undefined) {
     return (
@@ -3021,11 +3027,6 @@ export default function App() {
       </div>
     );
   }
-
-  // ── Sin sesión → landing o login ───────────────────────────────────────────
-  const [showLanding, setShowLanding] = useState(() => {
-    try { return sessionStorage.getItem("plano-skip-landing") !== "1"; } catch { return true; }
-  });
 
   if (!session) {
     if (showLanding) {
