@@ -159,6 +159,12 @@ const Icons = {
       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
     </svg>
   ),
+  Board: (props) => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="3" y="4" width="7" height="9" rx="1"/><rect x="14" y="4" width="7" height="5" rx="1"/>
+      <rect x="14" y="13" width="7" height="7" rx="1"/><rect x="3" y="17" width="7" height="3" rx="1"/>
+    </svg>
+  ),
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -300,6 +306,50 @@ function extractCharacters(blocks) {
 
 function extractScenes(blocks) {
   return blocks.map((b,i) => b.type===T.SCENE ? {index:i, id:b.id, text:b.text||"Sin título"} : null).filter(Boolean);
+}
+
+// Agrupa los bloques en "escenas" (heading + contenido hasta la próxima heading).
+// Los bloques antes de la primera heading quedan en un "preámbulo" fijo, no draggable.
+function buildSceneGroups(blocks) {
+  const preamble = [];
+  const groups = [];
+  let current = null;
+  blocks.forEach(b => {
+    if (b.type === T.SCENE) {
+      current = { id: b.id, heading: b, content: [] };
+      groups.push(current);
+    } else if (current) {
+      current.content.push(b);
+    } else {
+      preamble.push(b);
+    }
+  });
+  return { preamble, groups };
+}
+
+// Reconstruye el array plano de bloques a partir del preámbulo + grupos (en su orden actual)
+function flattenSceneGroups(preamble, groups) {
+  return [...preamble, ...groups.flatMap(g => [g.heading, ...g.content])];
+}
+
+// Lee INT/EXT y DÍA/NOCHE de un heading tipo "INT. CASA - DÍA" para colorear tarjetas
+function parseSceneHeading(text="") {
+  const t = text.toUpperCase();
+  const isInt = /^INT/.test(t);
+  const isExt = /^EXT/.test(t);
+  const isNight = /NOCHE|NIGHT/.test(t);
+  const isDay = /D[IÍ]A|DAY/.test(t);
+  return {
+    intExt: isInt && isExt ? "INT/EXT" : isInt ? "INT" : isExt ? "EXT" : null,
+    time: isNight ? "NOCHE" : isDay ? "DÍA" : null,
+  };
+}
+
+// Personajes (CHARACTER blocks) que aparecen dentro de una escena
+function charactersInScene(group) {
+  const names = new Set();
+  group.content.forEach(b => { if (b.type===T.CHARACTER && b.text?.trim()) names.add(b.text.trim().toUpperCase()); });
+  return [...names];
 }
 
 function countWords(blocks) {
@@ -1699,6 +1749,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
 function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
+    {id:"corkboard", Icon:Icons.Board,      label:"Tablero"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
     {id:"characters",Icon:Icons.Characters, label:"Personas"},
     {id:"notes",     Icon:Icons.Notes,      label:"Notas"},
@@ -1825,6 +1876,7 @@ function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSi
 function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onHelp }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
+    {id:"corkboard", Icon:Icons.Board,      label:"Tablero"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
     {id:"characters",Icon:Icons.Characters, label:"Personas"},
     {id:"notes",     Icon:Icons.Notes,      label:"Notas"},
@@ -1901,11 +1953,11 @@ function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, 
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
-  onRenameProject, scenes, characters, activeBlock, blocks, onNoteChange, stats,
-  onSceneClick, searchQuery, onSearchQuery, searchResults, onBack }) {
+  onRenameProject, scenes, characters, characterColors, activeBlock, blocks, onNoteChange, stats,
+  onSceneClick, onReorderScenes, isDark, searchQuery, onSearchQuery, searchResults, onBack }) {
 
   const panelTitle = {
-    projects:"Guiones", scenes:"Escenas", characters:"Personajes",
+    projects:"Guiones", scenes:"Escenas", corkboard:"Tablero", characters:"Personajes",
     notes:"Notas", stats:"Estadísticas", search:"Búsqueda",
   }[tab] || "Panel";
 
@@ -1929,14 +1981,16 @@ function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject,
         <span style={{fontWeight:700, color:C.textPrimary, fontSize:16}}>{panelTitle}</span>
       </div>
 
-      <div style={{flex:1, overflowY:"auto", padding:"14px 16px"}}>
+      <div style={{flex:1, overflowY:"auto", padding: tab==="corkboard" ? 0 : "14px 16px"}}>
         <PanelContent tab={tab} projects={projects} selectedId={selectedId}
           onSelectProject={p=>{onSelectProject(p);onBack();}}
           onNewProject={onNewProject}
           onDeleteProject={onDeleteProject} onRenameProject={onRenameProject}
-          scenes={scenes} characters={characters} activeBlock={activeBlock}
+          scenes={scenes} characters={characters} characterColors={characterColors}
+          activeBlock={activeBlock}
           blocks={blocks} onNoteChange={onNoteChange} stats={stats}
-          onSceneClick={i=>{onSceneClick(i);onBack();}} searchQuery={searchQuery}
+          onSceneClick={i=>{onSceneClick(i);onBack();}} onReorderScenes={onReorderScenes} isDark={isDark}
+          searchQuery={searchQuery}
           onSearchQuery={onSearchQuery}
           searchResults={searchResults}
           onResultClick={i=>{onSceneClick(i);onBack();}}
@@ -1952,9 +2006,9 @@ function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject,
 
 function PanelContent({ tab, projects, selectedId, onSelectProject, onNewProject,
   onDeleteProject, onRenameProject, onReorderProjects, onOpenTrash,
-  scenes, characters, activeBlock, blocks,
+  scenes, characters, characterColors, activeBlock, blocks,
   onNoteChange, stats, onSceneClick, searchQuery, onSearchQuery, searchResults,
-  onResultClick, isMobile }) {
+  onResultClick, onReorderScenes, isDark, isMobile }) {
   return (
     <>
       {tab==="projects" && (
@@ -1965,6 +2019,11 @@ function PanelContent({ tab, projects, selectedId, onSelectProject, onNewProject
       )}
       {tab==="scenes" && (
         <ScenesPanel scenes={scenes} onSceneClick={onSceneClick}/>
+      )}
+      {tab==="corkboard" && (
+        <CorkboardView blocks={blocks} characterColors={characterColors}
+          onReorder={onReorderScenes} onCardClick={onSceneClick}
+          onNoteChange={onNoteChange} isMobile={isMobile} isDark={isDark}/>
       )}
       {tab==="characters" && <CharactersPanel characters={characters}/>}
       {tab==="notes" && (
@@ -2129,6 +2188,150 @@ function ScenesPanel({ scenes, onSceneClick }) {
     </div>
   );
 }
+
+function CorkboardView({ blocks, characterColors, onReorder, onCardClick, onNoteChange, isMobile, isDark }) {
+  const { preamble, groups } = useMemo(() => buildSceneGroups(blocks), [blocks]);
+  const [dragOverId, setDragOverId] = useState(null);
+  const dragSrc = useRef(null);
+
+  const handleDragStart = (e, id) => {
+    dragSrc.current = id;
+    e.dataTransfer.effectAllowed = "move";
+  };
+  const handleDragOver = (e, id) => {
+    e.preventDefault();
+    if (id !== dragSrc.current) setDragOverId(id);
+  };
+  const handleDrop = (e, id) => {
+    e.preventDefault();
+    if (dragSrc.current && id !== dragSrc.current) onReorder(dragSrc.current, id);
+    setDragOverId(null); dragSrc.current = null;
+  };
+
+  if (groups.length === 0) {
+    return (
+      <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:24}}>
+        <div className="fade-in" style={{textAlign:"center", maxWidth:280}}>
+          <div className="empty-float" style={{color:C.textFaint, marginBottom:10, opacity:.6}}>
+            <Icons.Board style={{width:30,height:30}}/>
+          </div>
+          <div style={{color:C.textSec, fontSize:13, fontWeight:600, marginBottom:6}}>
+            Tablero vacío
+          </div>
+          <div style={{color:C.textFaint, fontSize:11.5, lineHeight:1.6}}>
+            Escribí INT. o EXT. en el editor para crear tu primera escena — va a aparecer acá como tarjeta.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      flex:1, overflowY:"auto", padding: isMobile ? "14px 14px 90px" : "26px 28px 60px",
+      background: isDark ? "radial-gradient(ellipse at top, #15120E, #0A0909 70%)" : C.bgEditor,
+    }}>
+      <div style={{
+        display:"grid",
+        gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill, minmax(220px, 1fr))",
+        gap: isMobile ? 12 : 16,
+      }}>
+        {groups.map((g, i) => {
+          const meta = parseSceneHeading(g.heading.text);
+          const chars = charactersInScene(g);
+          const wordCount = g.content.reduce((a,b) => a + (b.text?.trim().split(/\s+/).filter(Boolean).length||0), 0);
+          const isOver = dragOverId === g.id;
+          return (
+            <div key={g.id}
+              draggable
+              onDragStart={e=>handleDragStart(e,g.id)}
+              onDragOver={e=>handleDragOver(e,g.id)}
+              onDrop={e=>handleDrop(e,g.id)}
+              onDragEnd={()=>{setDragOverId(null);dragSrc.current=null;}}
+              onClick={()=>onCardClick(blocks.indexOf(g.heading))}
+              className="fade-in"
+              style={{
+                background:C.bgCard, border:`1px solid ${isOver?C.accent:C.border}`,
+                borderRadius:11, padding:"12px 13px 11px", cursor:"pointer",
+                boxShadow:`0 1px 0 rgba(0,0,0,.3), 0 4px 14px ${C.shadow}`,
+                transition:"border-color .12s, transform .12s, opacity .12s",
+                opacity:isOver?.6:1,
+                display:"flex", flexDirection:"column", gap:8, minHeight:130,
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent}}
+              onMouseLeave={e=>{if(!isOver)e.currentTarget.style.borderColor=C.border}}>
+
+              {/* Header: número + pin de drag + INT/EXT · DÍA/NOCHE */}
+              <div style={{display:"flex", alignItems:"center", gap:6}}>
+                <span style={{fontSize:9.5, fontWeight:700, color:C.accentWarm,
+                  background:"rgba(232,131,74,.12)", padding:"2px 6px", borderRadius:4,
+                  flexShrink:0}}>{i+1}</span>
+                {meta.intExt && (
+                  <span style={{fontSize:8.5, fontWeight:700, letterSpacing:.5, color:C.green,
+                    background:`rgba(${hexToRgb(C.green)},.12)`, padding:"2px 6px", borderRadius:4}}>
+                    {meta.intExt}
+                  </span>
+                )}
+                {meta.time && (
+                  <span style={{fontSize:8.5, fontWeight:700, letterSpacing:.5,
+                    color:meta.time==="NOCHE"?C.purple:C.yellow,
+                    background:`rgba(${hexToRgb(meta.time==="NOCHE"?C.purple:C.yellow)},.12)`,
+                    padding:"2px 6px", borderRadius:4}}>
+                    {meta.time}
+                  </span>
+                )}
+                <div style={{marginLeft:"auto", color:C.textFaint, cursor:"grab"}}
+                  onMouseDown={e=>e.stopPropagation()} title="Arrastrá para reordenar">
+                  <Icons.Drag/>
+                </div>
+              </div>
+
+              {/* Heading */}
+              <div style={{fontSize:11.5, fontFamily:"'Courier Prime',monospace",
+                fontWeight:700, color:C.textPrimary, letterSpacing:.2, lineHeight:1.4,
+                overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical"}}>
+                {g.heading.text || "Sin título"}
+              </div>
+
+              {/* Synopsis — editable, usa la nota del heading */}
+              <textarea
+                value={g.heading.note || ""}
+                onClick={e=>e.stopPropagation()}
+                onChange={e=>onNoteChange(blocks.indexOf(g.heading), e.target.value)}
+                placeholder="Sinopsis breve de la escena..."
+                rows={3}
+                style={{
+                  flex:1, width:"100%", background:"transparent", border:"none", resize:"none",
+                  outline:"none", color:C.textSec, fontSize:11.5, lineHeight:1.55,
+                  fontFamily:"inherit", padding:0,
+                }}/>
+
+              {/* Footer: personajes + palabras */}
+              <div style={{display:"flex", alignItems:"center", gap:6, flexWrap:"wrap",
+                paddingTop:7, borderTop:`1px solid ${C.border}`}}>
+                {chars.slice(0,3).map(name => (
+                  <span key={name} style={{
+                    fontSize:8.5, fontWeight:600, color:characterColors[name]||C.green,
+                    background:`rgba(${hexToRgb(characterColors[name]||C.green)},.12)`,
+                    padding:"2px 6px", borderRadius:9, whiteSpace:"nowrap",
+                    overflow:"hidden", textOverflow:"ellipsis", maxWidth:80,
+                  }}>{name}</span>
+                ))}
+                {chars.length>3 && (
+                  <span style={{fontSize:8.5, color:C.textFaint}}>+{chars.length-3}</span>
+                )}
+                <span style={{fontSize:8.5, color:C.textFaint, marginLeft:"auto", flexShrink:0}}>
+                  {wordCount}p
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 function CharactersPanel({ characters }) {
   const entries = Object.entries(characters);
@@ -3548,6 +3751,18 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     });
   };
 
+  // Reordena escenas completas (heading + contenido) arrastrando tarjetas del tablero
+  const reorderScenes = useCallback((srcId, dstId) => {
+    const { preamble, groups } = buildSceneGroups(blocks);
+    const srcIdx = groups.findIndex(g => g.id === srcId);
+    const dstIdx = groups.findIndex(g => g.id === dstId);
+    if (srcIdx < 0 || dstIdx < 0) return;
+    const newGroups = [...groups];
+    const [item] = newGroups.splice(srcIdx, 1);
+    newGroups.splice(dstIdx, 0, item);
+    updateBlocks(flattenSceneGroups(preamble, newGroups));
+  }, [blocks, updateBlocks]);
+
   const renameProject = async (id, name) => {
     setProjects(prev => prev.map(p => p.id===id ? {...p, name} : p));
     await supabase.from("scripts").update({ name }).eq("id", id);
@@ -3705,9 +3920,10 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     onRenameProject: renameProject,
     onReorderProjects: reorderProjects,
     onOpenTrash: openTrash,
-    scenes, characters, activeBlock:activeIndex, blocks,
+    scenes, characters, characterColors, activeBlock:activeIndex, blocks,
     onNoteChange: updateNote, stats,
     onSceneClick: scrollToBlock,
+    onReorderScenes: reorderScenes, isDark,
     searchQuery, onSearchQuery: setSearchQuery, searchResults,
   };
 
@@ -3769,7 +3985,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
             )}
 
             {/* Panel secundario izquierdo — guiones/personajes/notas/stats/búsqueda */}
-            {!focusMode && navTab!=="editor" && (
+            {!focusMode && navTab!=="editor" && navTab!=="corkboard" && (
               <div style={{
                 width:240, background:C.bgPanel, borderRight:`1px solid ${C.border}`,
                 display:"flex", flexDirection:"column", height:"100dvh", flexShrink:0,
@@ -3842,11 +4058,15 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                 </div>
               )}
 
-              {editorContent}
+              {navTab==="corkboard" && !focusMode ? (
+                <CorkboardView blocks={blocks} characterColors={characterColors}
+                  onReorder={reorderScenes} onCardClick={i=>{scrollToBlock(i);setNavTab("editor");}}
+                  onNoteChange={updateNote} isMobile={false} isDark={isDark}/>
+              ) : editorContent}
             </div>
 
             {/* Panel derecho — ESCENAS siempre visible en desktop */}
-            {!focusMode && (
+            {!focusMode && navTab!=="corkboard" && (
               <div style={{
                 width:200, background:C.bgPanel, borderLeft:`1px solid ${C.border}`,
                 display:"flex", flexDirection:"column", height:"100dvh", flexShrink:0,
