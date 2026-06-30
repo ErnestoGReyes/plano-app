@@ -2770,7 +2770,7 @@ function LandingPage({ isDark, onToggleTheme, onEnter }) {
   );
 }
 
-
+function AuthScreen({ isDark, onToggleTheme }) {
   const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
