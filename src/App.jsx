@@ -2,7 +2,7 @@
 // Celtx-inspired · Mobile-first · Undo/Redo · Búsqueda · Modo foco
 // Índice de escenas · Notas · Auth Supabase · Historial · Importar Fountain
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, Component } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -1051,6 +1051,34 @@ function HelpModal({ onClose, isDark }) {
               Siguiente →
             </Btn>
           </div>
+
+          {/* Atajos de teclado */}
+          <div style={{marginTop:22, paddingTop:18, borderTop:`1px solid ${C.border}`}}>
+            <div style={{fontSize:10, fontWeight:600, color:C.textMuted,
+              letterSpacing:.8, textTransform:"uppercase", marginBottom:10}}>
+              Atajos de teclado
+            </div>
+            <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"6px 16px"}}>
+              {[
+                ["Tab / Shift+Tab", "Cambiar tipo de bloque"],
+                ["Enter", "Nuevo bloque"],
+                ["Ctrl/⌘ + Z", "Deshacer"],
+                ["Ctrl/⌘ + Shift+Z", "Rehacer"],
+                ["Ctrl/⌘ + F", "Buscar"],
+                ["Ctrl/⌘ + S", "Guardar ahora"],
+                ["Ctrl/⌘ + N", "Nuevo guion"],
+              ].map(([key, label]) => (
+                <div key={key} style={{display:"flex", alignItems:"center", gap:8, fontSize:11.5}}>
+                  <kbd style={{
+                    background:C.bgCard, border:`1px solid ${C.borderBright}`,
+                    borderRadius:5, padding:"2px 7px", fontSize:10.5,
+                    fontFamily:"'Courier Prime',monospace", color:C.textSec, whiteSpace:"nowrap",
+                  }}>{key}</kbd>
+                  <span style={{color:C.textMuted}}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1485,6 +1513,8 @@ function makeGlobalCss(C) { return `
   @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
   .fade-in{animation:fadeIn .22s cubic-bezier(.16,1,.3,1)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  @keyframes savePulse{0%{transform:scale(1.6);opacity:0}60%{opacity:1}100%{transform:scale(1);opacity:1}}
+  .save-pulse{animation:savePulse .4s cubic-bezier(.34,1.56,.64,1)}
   .saving{animation:pulse 1.2s infinite}
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
   .slide-up{animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
@@ -1666,7 +1696,7 @@ function Modal({ open, onClose, title, children, width=420 }) {
 // NAV SIDEBAR — DESKTOP
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
+function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"scenes",    Icon:Icons.Scenes,     label:"Escenas"},
@@ -1774,7 +1804,12 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
         </div>
       </button>
 
-      {saving && <div className="saving" style={{
+      {saveError && <div title="Sin conexión — tus cambios están a salvo localmente y se sincronizarán solos" style={{
+        display:"flex", alignItems:"center", justifyContent:"center",
+        padding:"4px 0", color:C.red}}>
+        <Icons.Saving/>
+      </div>}
+      {!saveError && saving && <div className="saving" style={{
         display:"flex", alignItems:"center", justifyContent:"center",
         padding:"4px 0", color:C.textMuted}}>
         <Icons.Saving/>
@@ -2998,7 +3033,66 @@ const DEFAULT_PROJECT = () => ({
 // APP PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export default function App() {
+// ═══════════════════════════════════════════════════════════════════════════════
+// ERROR BOUNDARY — evita pantallas en blanco ante errores inesperados de render
+// ═══════════════════════════════════════════════════════════════════════════════
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    // Acá podrías mandar el error a un servicio de logging (Sentry, etc.)
+    console.error("Plano — error no controlado:", error, info);
+  }
+  handleReload = () => {
+    this.setState({ hasError: false, error: null });
+    window.location.reload();
+  };
+  render() {
+    if (this.state.hasError) {
+      const isDark = true;
+      const theme = DARK;
+      return (
+        <div style={{
+          minHeight: "100dvh", display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", background: theme.bgApp,
+          color: theme.textPrimary, padding: 24, textAlign: "center", gap: 14,
+          fontFamily: "system-ui, -apple-system, sans-serif",
+        }}>
+          <div style={{
+            fontFamily: "'Courier Prime',monospace", fontSize: 13,
+            letterSpacing: 2, color: theme.textMuted, marginBottom: 4,
+          }}>PLANO</div>
+          <div style={{ fontSize: 16, fontWeight: 600 }}>Algo salió mal</div>
+          <div style={{ fontSize: 13, color: theme.textSec, maxWidth: 360, lineHeight: 1.6 }}>
+            Encontramos un error inesperado. Tus guiones están a salvo — el
+            autoguardado los respaldó. Recargá la página para continuar.
+          </div>
+          <button onClick={this.handleReload} style={{
+            marginTop: 8, background: theme.accent, color: "#1A1510", border: "none",
+            borderRadius: 8, padding: "10px 22px", fontSize: 13, fontWeight: 600,
+            cursor: "pointer", fontFamily: "inherit",
+          }}>Recargar página</button>
+          {this.state.error && (
+            <details style={{ marginTop: 16, fontSize: 11, color: theme.textFaint, maxWidth: 420 }}>
+              <summary style={{ cursor: "pointer" }}>Detalles técnicos</summary>
+              <pre style={{ whiteSpace: "pre-wrap", textAlign: "left", marginTop: 8 }}>
+                {String(this.state.error?.message || this.state.error)}
+              </pre>
+            </details>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function AppInner() {
   const session = useAuth();
 
   // ── Tema día/noche ─────────────────────────────────────────────────────────
@@ -3053,35 +3147,53 @@ export default function App() {
   return <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}/>;
 }
 
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner/>
+    </ErrorBoundary>
+  );
+}
+
 function PlanoApp({ session, isDark, toggleTheme }) {
   // ── Proyectos ──────────────────────────────────────────────────────────────
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const project = projects.find(p=>p.id===selectedId) || projects[0];
 
   // Cargar guiones del usuario desde Supabase
-  useEffect(() => {
-    async function load() {
-      setLoadingProjects(true);
+  const loadProjects = useCallback(async () => {
+    setLoadingProjects(true);
+    setLoadError(null);
+    try {
       const { data, error } = await supabase
         .from("scripts")
         .select("id, name, blocks, updated_at")
         .is("deleted_at", null)
         .order("updated_at", { ascending: false });
-      if (!error && data) {
-        if (data.length === 0) {
-          // Sin guiones → mostrar pantalla de bienvenida
-          setProjects([]);
-        } else {
-          setProjects(data);
-          setSelectedId(data[0].id);
-        }
+      if (error) throw error;
+      if (data.length === 0) {
+        // Sin guiones → mostrar pantalla de bienvenida
+        setProjects([]);
+      } else {
+        setProjects(data);
+        setSelectedId(prev => prev && data.some(p=>p.id===prev) ? prev : data[0].id);
       }
+    } catch (err) {
+      console.error("Error cargando guiones:", err);
+      setLoadError(
+        navigator.onLine === false
+          ? "Sin conexión a internet. Revisá tu red e intentá de nuevo."
+          : "No pudimos cargar tus guiones. Intentá de nuevo."
+      );
+    } finally {
       setLoadingProjects(false);
     }
-    load();
   }, []);
+
+  useEffect(() => { loadProjects(); }, [loadProjects]);
 
   // ── Bloques con undo/redo ──────────────────────────────────────────────────
   const [blocks, setBlocksRaw, undo, redo, canUndo, canRedo] = useUndoable(project?.blocks||[]);
@@ -3101,9 +3213,72 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     setProjects(prev => prev.map(p => p.id===selectedId ? {...p, blocks:nb} : p));
   }, [selectedId, setBlocksRaw]);
 
-  // ── Autosave a Supabase ────────────────────────────────────────────────────
+  // ── Autosave a Supabase (con respaldo offline) ─────────────────────────────
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const lastVersionSave = useRef(0);
+  const PENDING_KEY = "plano-pending-saves";
+
+  const readPending = () => {
+    try { return JSON.parse(localStorage.getItem(PENDING_KEY) || "{}"); } catch { return {}; }
+  };
+  const writePending = obj => {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(obj)); } catch {}
+  };
+
+  const persistScript = useCallback(async (scriptId, blocksToSave) => {
+    // Respaldo local inmediato — si se corta la conexión, no se pierde nada
+    const pending = readPending();
+    pending[scriptId] = { blocks: blocksToSave, updated_at: new Date().toISOString() };
+    writePending(pending);
+
+    try {
+      const { error } = await supabase
+        .from("scripts")
+        .update({ blocks: blocksToSave, updated_at: new Date().toISOString() })
+        .eq("id", scriptId);
+      if (error) throw error;
+
+      // Guardado con éxito → limpiar respaldo local de este guion
+      const stillPending = readPending();
+      delete stillPending[scriptId];
+      writePending(stillPending);
+      setSaveError(false);
+      setJustSaved(true);
+      setTimeout(() => setJustSaved(false), 1500);
+
+      // Guardar versión cada 5 minutos
+      const now = Date.now();
+      if (now - lastVersionSave.current > 5 * 60 * 1000) {
+        lastVersionSave.current = now;
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("script_versions").insert({
+            script_id: scriptId,
+            user_id: user.id,
+            blocks: blocksToSave,
+          });
+          // Mantener solo las últimas 20 versiones por guion
+          const { data: old } = await supabase
+            .from("script_versions")
+            .select("id, created_at")
+            .eq("script_id", scriptId)
+            .order("created_at", { ascending: false })
+            .range(20, 100);
+          if (old?.length) {
+            await supabase.from("script_versions")
+              .delete().in("id", old.map(v=>v.id));
+          }
+        }
+      }
+      return true;
+    } catch (err) {
+      console.error("Error al guardar (queda respaldado localmente):", err);
+      setSaveError(true);
+      return false;
+    }
+  }, []);
 
   useEffect(() => {
     if (!selectedId || loadingProjects) return;
@@ -3111,41 +3286,28 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       const p = projects.find(x=>x.id===selectedId);
-      if (p) {
-        await supabase
-          .from("scripts")
-          .update({ blocks: p.blocks, updated_at: new Date().toISOString() })
-          .eq("id", selectedId);
-
-        // Guardar versión cada 5 minutos
-        const now = Date.now();
-        if (now - lastVersionSave.current > 5 * 60 * 1000) {
-          lastVersionSave.current = now;
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            await supabase.from("script_versions").insert({
-              script_id: selectedId,
-              user_id: user.id,
-              blocks: p.blocks,
-            });
-            // Mantener solo las últimas 20 versiones por guion
-            const { data: old } = await supabase
-              .from("script_versions")
-              .select("id, created_at")
-              .eq("script_id", selectedId)
-              .order("created_at", { ascending: false })
-              .range(20, 100);
-            if (old?.length) {
-              await supabase.from("script_versions")
-                .delete().in("id", old.map(v=>v.id));
-            }
-          }
-        }
-      }
+      if (p) await persistScript(p.id, p.blocks);
       setSaving(false);
     }, 1000);
     return () => clearTimeout(saveTimer.current);
-  }, [projects, selectedId]);
+  }, [projects, selectedId, persistScript]);
+
+  // Al recuperar conexión, reintentar cualquier guardado pendiente
+  useEffect(() => {
+    const flushPending = async () => {
+      const pending = readPending();
+      const ids = Object.keys(pending);
+      if (!ids.length) return;
+      setSaving(true);
+      for (const id of ids) {
+        await persistScript(id, pending[id].blocks);
+      }
+      setSaving(false);
+    };
+    flushPending(); // por si quedó algo pendiente de una sesión anterior
+    window.addEventListener("online", flushPending);
+    return () => window.removeEventListener("online", flushPending);
+  }, [persistScript]);
 
   // ── UI state ───────────────────────────────────────────────────────────────
   const [activeIndex, setActiveIndex] = useState(0);
@@ -3202,10 +3364,21 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         if (isMobile) setMobileTab("search");
         else setNavTab("search");
       }
+      if ((e.ctrlKey||e.metaKey) && e.key==="s") {
+        // El autoguardado ya corre solo; esto solo fuerza el guardado inmediato
+        e.preventDefault();
+        clearTimeout(saveTimer.current);
+        const p = projects.find(x=>x.id===selectedId);
+        if (p) { setSaving(true); persistScript(p.id, p.blocks).finally(()=>setSaving(false)); }
+      }
+      if ((e.ctrlKey||e.metaKey) && e.key==="n" && !e.shiftKey) {
+        e.preventDefault();
+        setNewProjectModal(true);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo, isMobile]);
+  }, [undo, redo, isMobile, projects, selectedId, persistScript]);
 
   // ── Derivados ──────────────────────────────────────────────────────────────
   const characters = useMemo(() => extractCharacters(blocks), [blocks]);
@@ -3413,7 +3586,22 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   const activeTab = isMobile ? mobileTab : navTab;
   const showEditor = activeTab==="editor" || !isMobile;
 
-  const editorContent = loadingProjects ? (
+  const editorContent = loadError ? (
+    <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
+      background:C.bgEditor, padding:24}}>
+      <div className="fade-in" style={{textAlign:"center", maxWidth:300}}>
+        <div style={{color:C.red, marginBottom:10, opacity:.8}}>
+          <Icons.Help style={{width:28,height:28}}/>
+        </div>
+        <div style={{color:C.textSec, fontSize:13, lineHeight:1.6, marginBottom:16}}>
+          {loadError}
+        </div>
+        <Btn onClick={loadProjects} variant="primary" style={{margin:"0 auto"}}>
+          Reintentar
+        </Btn>
+      </div>
+    </div>
+  ) : loadingProjects ? (
     <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
       background:C.bgEditor, color:C.textMuted, fontSize:13,
       fontFamily:"'Courier Prime',monospace", letterSpacing:2}}>
@@ -3577,7 +3765,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} saveError={saveError} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
             )}
 
             {/* Panel secundario izquierdo — guiones/personajes/notas/stats/búsqueda */}
@@ -3627,10 +3815,18 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                       {words} palabras · ~{pages} pág · {scenes.length} esc
                     </span>
                     <div style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:6}}>
-                      {saving
+                      {saveError
+                        ? <span title="Tus cambios están a salvo en este dispositivo y se sincronizarán al recuperar conexión"
+                            style={{fontSize:9, color:C.red, display:"flex", alignItems:"center", gap:4, cursor:"default"}}>
+                            <Icons.Saving/>Sin conexión · cambios guardados localmente
+                          </span>
+                        : saving
                         ? <span className="saving" style={{fontSize:9, color:C.textMuted, display:"flex", alignItems:"center", gap:4}}><Icons.Saving/>Guardando</span>
-                        : <span style={{fontSize:9, color:C.textFaint, display:"flex", alignItems:"center", gap:4}}>
-                            <div style={{width:5, height:5, borderRadius:"50%", background:C.accent, opacity:.5}}/>Guardado
+                        : <span className={justSaved ? "save-pulse" : undefined}
+                            style={{fontSize:9, color:C.textFaint, display:"flex", alignItems:"center", gap:4}}>
+                            <div style={{width:5, height:5, borderRadius:"50%",
+                              background:justSaved?C.green:C.accent, opacity:justSaved?1:.5,
+                              transition:"all .3s"}}/>Guardado
                           </span>
                       }
                     </div>
