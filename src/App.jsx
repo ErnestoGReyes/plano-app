@@ -416,7 +416,7 @@ function ImportFountainModal({ onImport, onClose, isDark }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:500, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:16, width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`, padding:"24px",
@@ -522,7 +522,7 @@ function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:500, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:16, width:"100%", maxWidth:400,
         boxShadow:`0 24px 60px ${C.shadow}`,
@@ -720,7 +720,7 @@ function OnboardingModal({ onClose, isDark }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:600, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:20, width:"100%", maxWidth:440,
         boxShadow:`0 32px 80px ${C.shadow}`,
@@ -813,7 +813,7 @@ function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClose }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:500, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:16, width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`,
@@ -943,7 +943,7 @@ function HelpModal({ onClose, isDark }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:500, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:18, width:"100%", maxWidth:580,
         boxShadow:`0 32px 80px ${C.shadow}`,
@@ -1093,7 +1093,7 @@ function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
       display:"flex", alignItems:"center", justifyContent:"center",
       zIndex:500, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:16, padding:"28px 24px", width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`,
@@ -1110,6 +1110,47 @@ function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
             cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex"}}>
             <Icons.Close/>
           </button>
+        </div>
+
+        {/* Mini preview de portada */}
+        <div style={{
+          display:"flex", justifyContent:"center", marginBottom:20,
+        }}>
+          <div style={{
+            width:format==="hollywood"?92:88,
+            height:format==="hollywood"?119:124,
+            background:isDark?"#1A1812":"#FAF8F2",
+            border:`1px solid ${C.borderBright}`,
+            borderRadius:3,
+            boxShadow:`0 8px 24px ${C.shadow}, 0 1px 0 ${C.borderBright}`,
+            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+            padding:"10px 8px", textAlign:"center", transition:"all .25s cubic-bezier(.16,1,.3,1)",
+            position:"relative", overflow:"hidden",
+          }}>
+            {/* Línea sutil de "página" */}
+            <div style={{position:"absolute", top:6, left:6, right:6, height:1, background:C.borderBright, opacity:.3}}/>
+            <div style={{
+              fontFamily:"'Courier Prime',monospace", fontWeight:700,
+              fontSize:7, color:isDark?"#D8CCAA":"#1A1510",
+              lineHeight:1.3, marginBottom:6, wordBreak:"break-word",
+            }}>
+              {(projectName||"GUION").toUpperCase().slice(0,28)}
+            </div>
+            {author && (
+              <>
+                <div style={{fontSize:4.5, color:isDark?"#8A8070":"#8A7860", marginBottom:2}}>Escrito por</div>
+                <div style={{fontSize:5.5, fontWeight:700, color:isDark?"#C0A060":"#8B6820", marginBottom:6}}>
+                  {author.slice(0,22)}
+                </div>
+              </>
+            )}
+            <div style={{
+              position:"absolute", bottom:8, fontSize:4, color:C.textFaint,
+              letterSpacing:.3,
+            }}>
+              {format==="hollywood" ? "LETTER · WGA" : "A4 · EUROPEO"}
+            </div>
+          </div>
         </div>
 
         {/* Formato */}
@@ -1424,42 +1465,66 @@ function exportToFountain(blocks, projectName) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 function makeGlobalCss(C) { return `
-  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body,#root{height:100%;background:${C.bgApp};color:${C.textPrimary};font-family:'Inter',system-ui,sans-serif}
-  ::-webkit-scrollbar{width:4px;height:4px}
+
+  /* ── Scrollbars noir ── */
+  ::-webkit-scrollbar{width:7px;height:7px}
   ::-webkit-scrollbar-track{background:transparent}
-  ::-webkit-scrollbar-thumb{background:${C.borderBright};border-radius:3px}
+  ::-webkit-scrollbar-thumb{background:${C.borderBright};border-radius:4px;border:1.5px solid ${C.bgApp};background-clip:padding-box}
+  ::-webkit-scrollbar-thumb:hover{background:${C.accent};background-clip:padding-box}
+  * { scrollbar-width: thin; scrollbar-color: ${C.borderBright} transparent; }
+
   textarea:focus,input:focus{outline:none}
   button{cursor:pointer;font-family:inherit}
   input{font-family:inherit}
-  mark{background:rgba(91,141,239,0.35);color:${C.textPrimary};border-radius:2px;padding:0 1px}
-  @keyframes fadeIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
-  .fade-in{animation:fadeIn .15s ease}
+  mark{background:${C.accentGlow};color:${C.accent};border-radius:2px;padding:0 1px}
+
+  /* ── Animaciones ── */
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .fade-in{animation:fadeIn .22s cubic-bezier(.16,1,.3,1)}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
   .saving{animation:pulse 1.2s infinite}
   @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .slide-up{animation:slideUp .25s cubic-bezier(.16,1,.3,1)}
+  .slide-up{animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
   @keyframes overlay-in{from{opacity:0}to{opacity:1}}
-  .overlay-in{animation:overlay-in .15s ease}
+  .overlay-in{animation:overlay-in .18s ease}
+  @keyframes modalIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+  .modal-in{animation:modalIn .22s cubic-bezier(.16,1,.3,1)}
   @keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}
-  .slide-right{animation:slideInRight .25s cubic-bezier(.16,1,.3,1)}
+  .slide-right{animation:slideInRight .28s cubic-bezier(.16,1,.3,1)}
+  @keyframes flicker{0%,100%{opacity:1}45%{opacity:.85}55%{opacity:1}}
+  .flicker{animation:flicker 4s ease-in-out infinite}
+  @keyframes grain{0%,100%{transform:translate(0,0)}10%{transform:translate(-1%,-2%)}20%{transform:translate(2%,1%)}30%{transform:translate(-1%,2%)}40%{transform:translate(1%,-1%)}50%{transform:translate(-2%,1%)}60%{transform:translate(2%,-2%)}70%{transform:translate(-1%,1%)}80%{transform:translate(1%,2%)}90%{transform:translate(-2%,-1%)}}
+
+  /* ── Estados vacíos ── */
+  @keyframes emptyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  .empty-float{animation:emptyFloat 3.5s ease-in-out infinite}
+
+  /* ── Nav buttons ── */
   .icon-nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;
     border:none;background:none;color:${C.textMuted};font-size:9px;font-weight:600;
-    letter-spacing:.5px;text-transform:uppercase;transition:color .15s,background .15s;
+    letter-spacing:.5px;text-transform:uppercase;transition:color .18s cubic-bezier(.16,1,.3,1),background .18s cubic-bezier(.16,1,.3,1),transform .15s ease;
     border-radius:8px;width:100%;cursor:pointer}
-  .icon-nav-btn:hover{color:${C.textSec};background:${C.bgCard}}
-  .icon-nav-btn.active{color:${C.accent};background:${C.accentGlow}}
+  .icon-nav-btn:hover{color:${C.textSec};background:${C.bgCard};transform:translateY(-1px)}
+  .icon-nav-btn.active{color:${C.accent};background:${C.accentGlow};box-shadow:inset 0 0 0 1px ${C.accent}30}
+  .icon-nav-btn:active{transform:translateY(0) scale(.96)}
+
   /* bottom nav mobile */
   .mobile-nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-    flex:1;padding:6px 2px 8px;border:none;background:none;cursor:pointer;transition:color .15s;
+    flex:1;padding:6px 2px 8px;border:none;background:none;cursor:pointer;transition:color .18s ease,transform .12s ease;
     font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
     color:${C.textMuted};min-height:52px}
   .mobile-nav-btn.active{color:${C.accent}}
-  .mobile-nav-btn:active{opacity:.7}
+  .mobile-nav-btn:active{opacity:.7;transform:scale(.94)}
+
   /* Tap highlight off on mobile */
   button{-webkit-tap-highlight-color:transparent}
   textarea{-webkit-tap-highlight-color:transparent}
+
+  /* ── Transiciones suaves globales ── */
+  button, input, textarea, a { transition: background-color .18s cubic-bezier(.16,1,.3,1), border-color .18s cubic-bezier(.16,1,.3,1), color .18s cubic-bezier(.16,1,.3,1), opacity .18s ease, box-shadow .2s ease, transform .12s ease; }
 `; }
 
 function InjectStyles({ theme }) {
@@ -1536,7 +1601,8 @@ function useUndoable(initial) {
 function Btn({ onClick, children, style={}, title, variant="ghost", disabled=false }) {
   const base = {
     border:"none", borderRadius:7, fontSize:12, fontWeight:600,
-    display:"flex", alignItems:"center", gap:5, transition:"all .14s",
+    display:"flex", alignItems:"center", gap:5,
+    transition:"color .16s cubic-bezier(.16,1,.3,1), background-color .16s cubic-bezier(.16,1,.3,1), border-color .16s cubic-bezier(.16,1,.3,1), box-shadow .2s ease, transform .12s ease, opacity .16s ease",
     opacity:disabled?.5:1, cursor:disabled?"not-allowed":"pointer", ...style,
   };
   const variants = {
@@ -1551,14 +1617,18 @@ function Btn({ onClick, children, style={}, title, variant="ghost", disabled=fal
       style={{...base, ...variants[variant]}}
       onMouseEnter={e=>{if(!disabled){
         if(variant==="ghost"){e.currentTarget.style.color=C.textPrimary;e.currentTarget.style.background=C.bgCard}
-        else if(variant==="primary"){e.currentTarget.style.opacity=".85"}
-        else if(variant==="outline"){e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.color=C.accent}
+        else if(variant==="primary"){e.currentTarget.style.boxShadow=`0 2px 14px ${C.accent}50`;e.currentTarget.style.transform="translateY(-1px)"}
+        else if(variant==="outline"){e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.color=C.accent;e.currentTarget.style.boxShadow=`0 0 0 1px ${C.accent}25`}
+        else if(variant==="warm"){e.currentTarget.style.boxShadow=`0 2px 12px ${C.accentWarm}40`}
       }}}
       onMouseLeave={e=>{if(!disabled){
         if(variant==="ghost"){e.currentTarget.style.color=C.textSec;e.currentTarget.style.background="none"}
-        else if(variant==="primary"){e.currentTarget.style.opacity="1"}
-        else if(variant==="outline"){e.currentTarget.style.borderColor=C.borderBright;e.currentTarget.style.color=C.textSec}
+        else if(variant==="primary"){e.currentTarget.style.boxShadow="none";e.currentTarget.style.transform="none"}
+        else if(variant==="outline"){e.currentTarget.style.borderColor=C.borderBright;e.currentTarget.style.color=C.textSec;e.currentTarget.style.boxShadow="none"}
+        else if(variant==="warm"){e.currentTarget.style.boxShadow="none"}
       }}}
+      onMouseDown={e=>{if(!disabled)e.currentTarget.style.transform="scale(.96)"}}
+      onMouseUp={e=>{if(!disabled)e.currentTarget.style.transform=variant==="primary"?"translateY(-1px)":"none"}}
     >{children}</button>
   );
 }
@@ -1576,10 +1646,10 @@ function Modal({ open, onClose, title, children, width=420 }) {
       position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
       display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, padding:16,
     }}>
-      <div onClick={e=>e.stopPropagation()} style={{
+      <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`, borderRadius:14,
         width:"100%", maxWidth:width, maxHeight:"90vh", overflowY:"auto",
-        boxShadow:"0 24px 60px rgba(0,0,0,.7)",
+        boxShadow:`0 24px 60px ${C.shadow}`,
       }}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"16px 20px", borderBottom:`1px solid ${C.border}`}}>
@@ -1614,7 +1684,7 @@ function NavSidebar({ tab, onTab, saving, isDark, onToggleTheme, onSignOut, user
       transition:"background .25s,border-color .25s",
     }}>
       {/* Logo — tira de película + cursor */}
-      <div style={{marginBottom:8, flexShrink:0, cursor:"default"}} title="PLANO Screenwriting">
+      <div className="flicker" style={{marginBottom:8, flexShrink:0, cursor:"default"}} title="PLANO Screenwriting">
         <svg width="52" height="40" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Fondo */}
           <rect width="52" height="40" rx="7"
@@ -1976,16 +2046,32 @@ function ProjectItem({ project, isActive, onSelect, onDelete, onRename, isDragOv
   );
 }
 
+function EmptyState({ icon, title, desc }) {
+  return (
+    <div className="fade-in" style={{textAlign:"center", padding:"40px 16px 20px"}}>
+      <div className="empty-float" style={{
+        width:52, height:52, borderRadius:"50%", margin:"0 auto 16px",
+        background:C.bgCard, border:`1px solid ${C.border}`,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        color:C.accent, opacity:.7,
+      }}>
+        {icon}
+      </div>
+      <p style={{fontSize:13, color:C.textSec, fontWeight:600, marginBottom:4}}>{title}</p>
+      {desc && <p style={{fontSize:11.5, color:C.textMuted, lineHeight:1.6, maxWidth:200, margin:"0 auto"}}>{desc}</p>}
+    </div>
+  );
+}
+
 function ScenesPanel({ scenes, onSceneClick }) {
   return (
     <div>
       <p style={{fontSize:10, color:C.textMuted, textTransform:"uppercase", letterSpacing:1.5,
         fontWeight:700, marginBottom:10}}>{scenes.length} escenas</p>
       {scenes.length===0 && (
-        <div style={{textAlign:"center", padding:"32px 16px", color:C.textMuted}}>
-          <div style={{marginBottom:10, color:C.textMuted}}><Icons.Scenes style={{width:28,height:28}}/></div>
-          <p style={{fontSize:13}}>Escribí INT. o EXT. para crear una escena.</p>
-        </div>
+        <EmptyState icon={<Icons.Scenes style={{width:22,height:22}}/>}
+          title="Sin escenas todavía"
+          desc="Escribí INT. o EXT. para crear la primera."/>
       )}
       {scenes.map((s,i) => (
         <div key={s.id} onClick={()=>onSceneClick(s.index)}
@@ -2017,10 +2103,9 @@ function CharactersPanel({ characters }) {
       <p style={{fontSize:10, color:C.textMuted, textTransform:"uppercase", letterSpacing:1.5,
         fontWeight:700, marginBottom:10}}>{entries.length} personajes</p>
       {entries.length===0 && (
-        <div style={{textAlign:"center", padding:"32px 16px", color:C.textMuted}}>
-          <div style={{marginBottom:10, color:C.textMuted}}><Icons.Characters style={{width:28,height:28}}/></div>
-          <p style={{fontSize:13}}>Los personajes aparecen al escribir diálogos.</p>
-        </div>
+        <EmptyState icon={<Icons.Characters style={{width:22,height:22}}/>}
+          title="Reparto vacío"
+          desc="Los personajes aparecen automáticamente al escribir sus diálogos."/>
       )}
       {entries.sort((a,b)=>b[1].lines-a[1].lines).map(([name,info]) => (
         <div key={name} style={{padding:"10px 12px", marginBottom:6, borderRadius:9,
@@ -2071,7 +2156,7 @@ function NotesPanel({ activeBlock, blocks, onNoteChange }) {
           Seleccioná un bloque para agregar una nota.
         </p>
       )}
-      {withNotes.length>0 && (
+      {withNotes.length>0 ? (
         <>
           <p style={{fontSize:10, color:C.textMuted, textTransform:"uppercase",
             letterSpacing:1.5, fontWeight:700, marginBottom:8}}>
@@ -2088,6 +2173,10 @@ function NotesPanel({ activeBlock, blocks, onNoteChange }) {
             </div>
           ))}
         </>
+      ) : (
+        <EmptyState icon={<Icons.Notes style={{width:22,height:22}}/>}
+          title="Sin notas aún"
+          desc="Seleccioná un bloque del guion y anotá ideas, referencias o preguntas."/>
       )}
     </div>
   );
@@ -2540,19 +2629,39 @@ function AuthScreen({ isDark, onToggleTheme }) {
       minHeight:"100dvh", display:"flex", flexDirection:"column",
       alignItems:"center", justifyContent:"center",
       background:C.bgApp, padding:"24px 16px",
+      position:"relative", overflow:"hidden",
     }}>
+      {/* Viñeta cinematográfica */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none",
+        background:isDark
+          ? "radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,.55) 100%)"
+          : "radial-gradient(ellipse at center, transparent 0%, transparent 45%, rgba(40,30,15,.08) 100%)",
+      }}/>
+
+      {/* Grano de película sutil */}
+      <svg style={{position:"absolute", inset:0, width:"100%", height:"100%",
+        pointerEvents:"none", opacity:isDark?.05:.025, mixBlendMode:isDark?"screen":"multiply"}}>
+        <filter id="filmGrain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>
+          <feColorMatrix type="saturate" values="0"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#filmGrain)"/>
+      </svg>
+
       {/* Theme toggle top-right */}
       <button onClick={onToggleTheme} title={isDark?"Modo día":"Modo noche"}
         style={{position:"fixed", top:16, right:16, background:"none", border:"none",
           color:C.textMuted, cursor:"pointer", padding:8, borderRadius:8,
-          display:"flex", alignItems:"center"}}
-        onMouseEnter={e=>e.currentTarget.style.color=C.textSec}
-        onMouseLeave={e=>e.currentTarget.style.color=C.textMuted}>
+          display:"flex", alignItems:"center", zIndex:2,
+          transition:"color .18s ease, background .18s ease"}}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
         {isDark ? <Icons.Sun/> : <Icons.Moon/>}
       </button>
 
       {/* Logo */}
-      <div style={{marginBottom:32}}>
+      <div className="fade-in" style={{marginBottom:32, position:"relative", zIndex:2}}>
         <svg width="80" height="62" viewBox="0 0 52 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect width="52" height="40" rx="7"
             fill={isDark ? "#080808" : "#EBE4D8"}
@@ -2575,11 +2684,11 @@ function AuthScreen({ isDark, onToggleTheme }) {
       </div>
 
       {/* Card */}
-      <div style={{
-        width:"100%", maxWidth:400,
+      <div className="modal-in" style={{
+        width:"100%", maxWidth:400, position:"relative", zIndex:2,
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:16, padding:"32px 28px",
-        boxShadow:`0 24px 60px ${C.shadow}`,
+        boxShadow:`0 24px 60px ${C.shadow}, 0 0 0 1px ${C.accent}08`,
       }}>
         <h1 style={{
           fontFamily:"'Courier Prime',monospace", fontSize:22, fontWeight:700,
@@ -2678,7 +2787,7 @@ function AuthScreen({ isDark, onToggleTheme }) {
         </div>
       </div>
 
-      <p style={{marginTop:20, fontSize:11, color:C.textFaint, textAlign:"center"}}>
+      <p style={{marginTop:20, fontSize:11, color:C.textFaint, textAlign:"center", position:"relative", zIndex:2}}>
         Plano Screenwriting · tus guiones siempre disponibles
       </p>
     </div>
@@ -3353,8 +3462,13 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                 </div>
                 <div style={{flex:1, overflowY:"auto", padding:"8px 0"}}>
                   {scenes.length === 0 ? (
-                    <div style={{padding:"24px 14px", textAlign:"center", color:C.textFaint, fontSize:11}}>
-                      Sin escenas aún
+                    <div className="fade-in" style={{padding:"32px 14px", textAlign:"center"}}>
+                      <div className="empty-float" style={{color:C.textFaint, marginBottom:8, opacity:.6}}>
+                        <Icons.Scenes style={{width:20,height:20}}/>
+                      </div>
+                      <div style={{color:C.textFaint, fontSize:10.5, lineHeight:1.6}}>
+                        Sin escenas aún
+                      </div>
                     </div>
                   ) : scenes.map((s, i) => (
                     <div key={s.id} onClick={()=>scrollToBlock(s.index)}
