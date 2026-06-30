@@ -2588,7 +2588,189 @@ function useAuth() {
 // PANTALLA DE AUTENTICACIÓN
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function AuthScreen({ isDark, onToggleTheme }) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// LANDING PAGE — puerta de entrada antes del login
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function LandingFeature({ icon, title, desc, isDark }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+      style={{
+        padding:"22px 20px", borderRadius:14,
+        background:C.bgCard, border:`1px solid ${hover?C.accent+"50":C.border}`,
+        transition:"border-color .2s cubic-bezier(.16,1,.3,1), transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s ease",
+        transform:hover?"translateY(-3px)":"none",
+        boxShadow:hover?`0 12px 28px ${C.shadow}`:"none",
+      }}>
+      <div style={{width:34, height:34, borderRadius:9, background:C.accentGlow,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        color:C.accent, marginBottom:14}}>
+        {icon}
+      </div>
+      <div style={{fontSize:14, fontWeight:700, color:C.textPrimary, marginBottom:6,
+        fontFamily:"'Courier Prime',monospace"}}>{title}</div>
+      <div style={{fontSize:12.5, color:C.textMuted, lineHeight:1.6}}>{desc}</div>
+    </div>
+  );
+}
+
+function LandingPage({ isDark, onToggleTheme, onEnter }) {
+  return (
+    <div style={{minHeight:"100dvh", background:C.bgApp, position:"relative", overflow:"hidden"}}>
+
+      {/* Viñeta + grano, igual que el login */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none",
+        background:isDark
+          ? "radial-gradient(ellipse at top, rgba(192,160,96,.05) 0%, transparent 45%), radial-gradient(ellipse at center, transparent 0%, transparent 40%, rgba(0,0,0,.5) 100%)"
+          : "radial-gradient(ellipse at center, transparent 0%, transparent 45%, rgba(40,30,15,.07) 100%)",
+      }}/>
+      <svg style={{position:"absolute", inset:0, width:"100%", height:"100%",
+        pointerEvents:"none", opacity:isDark?.05:.025, mixBlendMode:isDark?"screen":"multiply"}}>
+        <filter id="landingGrain">
+          <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch"/>
+          <feColorMatrix type="saturate" values="0"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#landingGrain)"/>
+      </svg>
+
+      {/* Header */}
+      <div style={{position:"relative", zIndex:2, display:"flex", alignItems:"center",
+        justifyContent:"space-between", padding:"22px 28px", maxWidth:1100, margin:"0 auto"}}>
+        <div style={{display:"flex", alignItems:"center", gap:10}}>
+          <svg width="38" height="29" viewBox="0 0 52 40" fill="none">
+            <rect width="52" height="40" rx="7" fill={isDark?"#080808":"#EBE4D8"} stroke={isDark?"#2A2520":"#C4B898"} strokeWidth="0.75"/>
+            <rect x="3" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <rect x="3" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <rect x="3" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <rect x="44" y="5" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <rect x="44" y="17" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <rect x="44" y="29" width="5" height="7" rx="1.5" fill={isDark?"#1E1A14":"#C4B898"}/>
+            <text x="26" y="24" fontFamily="'Courier Prime',monospace" fontSize="13" fontWeight="700"
+              fill={isDark?"#E8E0D0":"#1A1510"} textAnchor="middle" letterSpacing="2">PLANO</text>
+            <rect x="10" y="28" width="30" height="1.5" rx="0.75" fill={isDark?"#C0A060":"#8B6820"} opacity="0.9"/>
+          </svg>
+          <span style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:14,
+            color:C.textPrimary, letterSpacing:1}}>PLANO</span>
+        </div>
+        <div style={{display:"flex", alignItems:"center", gap:8}}>
+          <button onClick={onToggleTheme} title={isDark?"Modo día":"Modo noche"}
+            style={{background:"none", border:"none", color:C.textMuted, cursor:"pointer",
+              padding:8, borderRadius:8, display:"flex", alignItems:"center",
+              transition:"color .18s ease, background .18s ease"}}
+            onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
+            onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
+            {isDark ? <Icons.Sun/> : <Icons.Moon/>}
+          </button>
+          <button onClick={onEnter} style={{
+            background:"none", border:`1px solid ${C.borderBright}`, borderRadius:9,
+            color:C.textSec, fontSize:12.5, fontWeight:600, padding:"8px 16px",
+            cursor:"pointer", fontFamily:"inherit",
+            transition:"border-color .18s ease, color .18s ease"}}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.color=C.accent}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor=C.borderBright;e.currentTarget.style.color=C.textSec}}>
+            Entrar
+          </button>
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="fade-in" style={{position:"relative", zIndex:2, textAlign:"center",
+        padding:"64px 24px 56px", maxWidth:680, margin:"0 auto"}}>
+        <div style={{
+          display:"inline-flex", alignItems:"center", gap:6,
+          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:20,
+          padding:"5px 14px", fontSize:11, color:C.textMuted, marginBottom:24,
+        }}>
+          <div style={{width:5, height:5, borderRadius:"50%", background:C.accent}}/>
+          Para escritores que filman sus ideas
+        </div>
+
+        <h1 style={{
+          fontFamily:"'Courier Prime',monospace", fontWeight:700,
+          fontSize:"clamp(28px, 5vw, 44px)", lineHeight:1.25,
+          color:C.textPrimary, margin:"0 0 18px", letterSpacing:-.5,
+        }}>
+          Cada gran película<br/>
+          empieza con <span style={{color:C.accent}}>FADE IN:</span>
+        </h1>
+
+        <p style={{fontSize:15, color:C.textMuted, lineHeight:1.7, margin:"0 auto 32px", maxWidth:480}}>
+          Plano es tu sala de escritura. Formato profesional, guardado automático
+          en la nube y todo lo necesario para llevar tu historia de la primera
+          escena a la última página.
+        </p>
+
+        <div style={{display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap"}}>
+          <button onClick={onEnter} style={{
+            padding:"13px 28px", borderRadius:11, border:"none",
+            background:C.accent, color:"#fff", fontSize:14, fontWeight:700,
+            cursor:"pointer", fontFamily:"'Courier Prime',monospace", letterSpacing:.3,
+            display:"flex", alignItems:"center", gap:8,
+            boxShadow:`0 4px 20px ${C.accent}35`,
+            transition:"transform .15s ease, box-shadow .2s ease",
+          }}
+            onMouseEnter={e=>{e.currentTarget.style.transform="translateY(-2px)";e.currentTarget.style.boxShadow=`0 8px 28px ${C.accent}50`}}
+            onMouseLeave={e=>{e.currentTarget.style.transform="none";e.currentTarget.style.boxShadow=`0 4px 20px ${C.accent}35`}}>
+            Empezar a escribir <Icons.Plus style={{width:14,height:14}}/>
+          </button>
+        </div>
+      </div>
+
+      {/* Mockup de editor */}
+      <div className="fade-in" style={{position:"relative", zIndex:2, maxWidth:680, margin:"0 auto 64px", padding:"0 24px"}}>
+        <div style={{
+          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:12,
+          padding:"28px 36px 36px", boxShadow:`0 24px 60px ${C.shadow}`,
+        }}>
+          <div style={{fontFamily:"'Courier Prime',monospace", fontSize:12.5, lineHeight:1.75}}>
+            <div style={{color:C.accent, fontWeight:700, marginBottom:8}}>INT. CAFÉ — NOCHE</div>
+            <div style={{color:C.textMuted, marginBottom:8}}>
+              El café está casi vacío. Una lámpara parpadeante ilumina la barra de madera desgastada.
+            </div>
+            <div style={{color:C.accentWarm, textAlign:"center", marginBottom:2}}>SOFÍA</div>
+            <div style={{color:C.textSec, textAlign:"center", marginBottom:8}}>¿Cuánto tiempo llevas esperando?</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div style={{position:"relative", zIndex:2, maxWidth:900, margin:"0 auto", padding:"0 24px 72px"}}>
+        <div style={{
+          display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px, 1fr))",
+          gap:14,
+        }}>
+          <LandingFeature isDark={isDark}
+            icon={<Icons.Editor style={{width:17,height:17}}/>}
+            title="Formato profesional"
+            desc="Hollywood o europeo, con márgenes y tipografía exactos al estándar de la industria."/>
+          <LandingFeature isDark={isDark}
+            icon={<Icons.Saving style={{width:17,height:17}}/>}
+            title="Nunca se pierde"
+            desc="Guardado automático en la nube. Cambiá de compu, de celular, da igual."/>
+          <LandingFeature isDark={isDark}
+            icon={<Icons.History style={{width:17,height:17}}/>}
+            title="Historial de versiones"
+            desc="Volvé a cómo estaba tu guion hace una semana con un solo click."/>
+          <LandingFeature isDark={isDark}
+            icon={<Icons.PDF style={{width:17,height:17}}/>}
+            title="Exportá cuando quieras"
+            desc="PDF listo para imprimir o .fountain compatible con cualquier app."/>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div style={{position:"relative", zIndex:2, textAlign:"center", padding:"0 24px 40px"}}>
+        <p style={{fontSize:11, color:C.textFaint}}>
+          Plano Screenwriting · hecho para contar historias
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
   const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -2840,8 +3022,24 @@ export default function App() {
     );
   }
 
-  // ── Sin sesión → pantalla de login ────────────────────────────────────────
+  // ── Sin sesión → landing o login ───────────────────────────────────────────
+  const [showLanding, setShowLanding] = useState(() => {
+    try { return sessionStorage.getItem("plano-skip-landing") !== "1"; } catch { return true; }
+  });
+
   if (!session) {
+    if (showLanding) {
+      return (
+        <>
+          <InjectStyles theme={isDark?"dark":"light"}/>
+          <LandingPage isDark={isDark} onToggleTheme={toggleTheme}
+            onEnter={()=>{
+              try { sessionStorage.setItem("plano-skip-landing","1"); } catch {}
+              setShowLanding(false);
+            }}/>
+        </>
+      );
+    }
     return (
       <>
         <InjectStyles theme={isDark?"dark":"light"}/>
