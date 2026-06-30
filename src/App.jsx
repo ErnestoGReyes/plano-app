@@ -1078,7 +1078,6 @@ function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
     background: active ? C.accentGlow : "none",
     cursor:"pointer", transition:"all .15s",
   });
-
   const generate = () => {
     setGenerating(true);
     setTimeout(() => {
@@ -3134,13 +3133,37 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         ? "40px 20px 80px"
         : isMobile
           ? "16px 14px calc(env(safe-area-inset-bottom, 0px) + 80px)"
-          : "28px 48px 80px",
+          : "24px 32px 60px",
       background:focusMode ? C.bgApp : C.bgEditor,
       transition:"background .3s",
+      display:isMobile||focusMode ? "block" : "flex",
+      justifyContent:isMobile||focusMode ? "flex-start" : "center",
     }}>
-      <div style={{maxWidth:focusMode?580:680, margin:"0 auto",
-        paddingLeft:isMobile?0:50}}>
-        {blocks.map((block, index) => (
+      <div style={isMobile||focusMode ? {maxWidth:focusMode?580:"100%", margin:"0 auto"} : {
+        width:"100%", maxWidth:640,
+        background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8,
+        padding:"32px 44px 40px",
+        boxShadow:`0 2px 0 rgba(0,0,0,.4), 0 8px 32px ${C.shadow}`,
+      }}>
+        {!isMobile && !focusMode && (
+          <div style={{position:"relative", marginLeft:-44}}>
+            {blocks.map((block, index) => (
+              <ScriptBlock key={block.id} block={block} index={index}
+                isActive={index===activeIndex} characterColors={characterColors}
+                onUpdate={updateBlock} onFocus={setActiveIndex}
+                onKeyDown={handleKeyDown} isMobile={isMobile}
+                charSuggestions={index===activeIndex ? charSuggestions : []}
+                onAcceptSuggestion={name=>updateBlock(index,name)}
+                onAddBlockAfter={addBlockAfter}
+                onDeleteBlock={deleteBlock}
+                inputRef={el=>{
+                  if(el) inputRefs.current[index]=el;
+                  else delete inputRefs.current[index];
+                }}/>
+            ))}
+          </div>
+        )}
+        {(isMobile || focusMode) && blocks.map((block, index) => (
           <ScriptBlock key={block.id} block={block} index={index}
             isActive={index===activeIndex} characterColors={characterColors}
             onUpdate={updateBlock} onFocus={setActiveIndex}
@@ -3166,6 +3189,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
             }, 10);
           }}
           style={{marginTop:isMobile?24:32, paddingTop:14,
+            marginLeft:!isMobile&&!focusMode?0:0,
             borderTop:`1px dashed ${C.border}`,
             textAlign:"center", color:C.textFaint, fontSize:13, cursor:"pointer",
             transition:"color .15s"}}
@@ -3248,6 +3272,25 @@ function PlanoApp({ session, isDark, toggleTheme }) {
               <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
             )}
 
+            {/* Panel secundario izquierdo — guiones/personajes/notas/stats/búsqueda */}
+            {!focusMode && navTab!=="editor" && (
+              <div style={{
+                width:240, background:C.bgPanel, borderRight:`1px solid ${C.border}`,
+                display:"flex", flexDirection:"column", height:"100dvh", flexShrink:0,
+              }}>
+                <div style={{padding:"14px 14px 10px", borderBottom:`1px solid ${C.border}`, flexShrink:0}}>
+                  <span style={{fontSize:9, fontWeight:700, color:C.textMuted,
+                    textTransform:"uppercase", letterSpacing:1.5}}>
+                    {{projects:"Guiones",characters:"Personajes",notes:"Notas",
+                      stats:"Estadísticas",search:"Búsqueda"}[navTab]||"Panel"}
+                  </span>
+                </div>
+                <div style={{flex:1, overflowY:"auto", padding:"10px 10px"}}>
+                  <PanelContent tab={navTab} {...commonPanelProps} isMobile={false}/>
+                </div>
+              </div>
+            )}
+
             {/* Center column */}
             <div style={{flex:1, display:"flex", flexDirection:"column", minWidth:0}}>
               {!focusMode && (
@@ -3264,20 +3307,25 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                     focusMode={focusMode} onFocusMode={()=>setFocusMode(v=>!v)}
                     isMobile={false}/>
                   {/* Script header */}
-                  <div style={{padding:"7px 24px", background:C.bgPanel,
+                  <div style={{padding:"8px 24px", background:C.bgApp,
                     borderBottom:`1px solid ${C.border}`,
                     display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", minHeight:36}}>
-                    <h1 style={{margin:0, fontSize:14, fontWeight:700, color:C.accent,
-                      fontFamily:"'Courier Prime',monospace", letterSpacing:-.2,
-                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:280}}>
+                    <h1 style={{margin:0, fontSize:13, fontWeight:700, color:C.accent,
+                      fontFamily:"'Courier Prime',monospace", letterSpacing:.3,
+                      overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:320}}>
                       {project?.name}
                     </h1>
-                    <span style={{fontSize:11, color:C.textMuted}}>
+                    <span style={{fontSize:10, color:C.textMuted}}>
                       {words} palabras · ~{pages} pág · {scenes.length} esc
                     </span>
-                    <span style={{fontSize:11, color:C.textFaint, marginLeft:"auto"}}>
-                      Tab = tipo · Enter = siguiente · Ctrl+Z = deshacer · Ctrl+F = buscar
-                    </span>
+                    <div style={{marginLeft:"auto", display:"flex", alignItems:"center", gap:6}}>
+                      {saving
+                        ? <span className="saving" style={{fontSize:9, color:C.textMuted, display:"flex", alignItems:"center", gap:4}}><Icons.Saving/>Guardando</span>
+                        : <span style={{fontSize:9, color:C.textFaint, display:"flex", alignItems:"center", gap:4}}>
+                            <div style={{width:5, height:5, borderRadius:"50%", background:C.accent, opacity:.5}}/>Guardado
+                          </span>
+                      }
+                    </div>
                   </div>
                 </>
               )}
@@ -3293,9 +3341,46 @@ function PlanoApp({ session, isDark, toggleTheme }) {
               {editorContent}
             </div>
 
-            {/* Right panel */}
-            {!focusMode && navTab!=="editor" && (
-              <RightPanel tab={navTab} {...commonPanelProps} isMobile={false}/>
+            {/* Panel derecho — ESCENAS siempre visible en desktop */}
+            {!focusMode && (
+              <div style={{
+                width:200, background:C.bgPanel, borderLeft:`1px solid ${C.border}`,
+                display:"flex", flexDirection:"column", height:"100dvh", flexShrink:0,
+              }}>
+                <div style={{padding:"14px 14px 10px", borderBottom:`1px solid ${C.border}`, flexShrink:0}}>
+                  <span style={{fontSize:9, fontWeight:700, color:C.textMuted,
+                    textTransform:"uppercase", letterSpacing:1.5}}>Escenas</span>
+                </div>
+                <div style={{flex:1, overflowY:"auto", padding:"8px 0"}}>
+                  {scenes.length === 0 ? (
+                    <div style={{padding:"24px 14px", textAlign:"center", color:C.textFaint, fontSize:11}}>
+                      Sin escenas aún
+                    </div>
+                  ) : scenes.map((s, i) => (
+                    <div key={s.id} onClick={()=>scrollToBlock(s.index)}
+                      style={{
+                        padding:"7px 0 7px 12px",
+                        borderLeft:`2px solid ${s.index===activeIndex?C.accent:"transparent"}`,
+                        background:s.index===activeIndex?C.bgActive:"transparent",
+                        cursor:"pointer", transition:"all .12s",
+                        marginBottom:2,
+                      }}
+                      onMouseEnter={e=>{if(s.index!==activeIndex)e.currentTarget.style.background=C.bgCard}}
+                      onMouseLeave={e=>{if(s.index!==activeIndex)e.currentTarget.style.background="transparent"}}>
+                      <div style={{fontSize:9, fontFamily:"'Courier Prime',monospace",
+                        color:s.index===activeIndex?C.accent:C.textMuted,
+                        fontWeight:s.index===activeIndex?700:400,
+                        overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                        paddingRight:10, letterSpacing:.3}}>
+                        {s.text||"Sin título"}
+                      </div>
+                      <div style={{fontSize:8, color:C.textFaint, marginTop:2}}>
+                        Esc. {i+1} · p.{Math.ceil((s.index+1)/2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </>
         )}
