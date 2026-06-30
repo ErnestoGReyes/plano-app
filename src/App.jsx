@@ -3242,20 +3242,20 @@ function PlanoApp({ session, isDark, toggleTheme }) {
         ? "40px 20px 80px"
         : isMobile
           ? "16px 14px calc(env(safe-area-inset-bottom, 0px) + 80px)"
-          : "24px 32px 60px",
+          : "24px 20px 60px",
       background:focusMode ? C.bgApp : C.bgEditor,
       transition:"background .3s",
       display:isMobile||focusMode ? "block" : "flex",
       justifyContent:isMobile||focusMode ? "flex-start" : "center",
     }}>
       <div style={isMobile||focusMode ? {maxWidth:focusMode?580:"100%", margin:"0 auto"} : {
-        width:"100%", maxWidth:640,
+        width:"100%", maxWidth:880,
         background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8,
-        padding:"32px 44px 40px",
+        padding:"36px 64px 48px",
         boxShadow:`0 2px 0 rgba(0,0,0,.4), 0 8px 32px ${C.shadow}`,
       }}>
         {!isMobile && !focusMode && (
-          <div style={{position:"relative", marginLeft:-44}}>
+          <div style={{position:"relative", marginLeft:-64}}>
             {blocks.map((block, index) => (
               <ScriptBlock key={block.id} block={block} index={index}
                 isActive={index===activeIndex} characterColors={characterColors}
