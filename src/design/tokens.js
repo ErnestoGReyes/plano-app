@@ -28,25 +28,25 @@ export const FONT_DISPLAY = "'Cormorant Garamond',serif";
 // ── NOIR OSCURO — negro total, dorado ────────────────────────────────────────
 export const DARK = {
   bgApp:        "#0A0909",
-  bgSidebar:    "#080808",
-  bgEditor:     "#0E0D0C",
+  bgSidebar:    "#070706",
+  bgEditor:     "#0D0B0A",
   bgPanel:      "#0A0909",
-  bgCard:       "#141210",
-  bgCardHover:  "#1C1916",
-  bgActive:     "#1E1A14",
-  border:       "#1E1A14",
-  borderBright: "#2A2520",
+  bgCard:       "#241E14",   // antes #141210 — ahora se distingue del fondo
+  bgCardHover:  "#342B1D",   // antes #1C1916
+  bgActive:     "#453927",   // antes #1E1A14 (era igual a "border")
+  border:       "#554630",   // antes #1E1A14 — ya no coincide con bgActive
+  borderBright: "#7C6646",   // antes #2A2520 — ahora visible como borde real
   accent:       "#C0A060",   // dorado
   accentGlow:   "rgba(192,160,96,0.12)",
   accentWarm:   "#D4B870",   // dorado claro
-  green:        "#7A9A60",   // verde oliva
-  purple:       "#8A7090",   // violeta apagado
+  green:        "#8AAE6E",   // verde oliva, aclarado para contraste
+  purple:       "#A88CB0",   // violeta apagado, aclarado para contraste
   yellow:       "#D4B060",   // ámbar
-  red:          "#A04040",   // rojo oscuro
+  red:          "#D67070",   // antes #A04040 (contraste 3.13 → ahora 6.07)
   textPrimary:  "#E8E0D0",   // crema cálido
-  textSec:      "#8A8070",   // gris cálido
-  textMuted:    "#4A4438",   // muted cálido
-  textFaint:    "#252018",   // casi negro cálido
+  textSec:      "#A69C8B",   // antes #8A8070, un poco más claro
+  textMuted:    "#7F7563",   // antes #4A4438 (contraste 2.06 → ahora 4.38)
+  textFaint:    "#4A4438",   // antes #252018 (contraste 1.23 → ahora 2.06)
   white:        "#F0E8D8",
   shadow:       "rgba(0,0,0,0.85)",
 };
