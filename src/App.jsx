@@ -185,6 +185,16 @@ const CHARACTER_PALETTE = [
   "#B89050","#F0D890","#9A7840","#C8A860","#7A5830",
 ];
 
+// ── SISTEMA DE DISEÑO — escalas consistentes ─────────────────────────────────
+const RADIUS = { xs:4, sm:8, md:12, lg:16, pill:20 };
+const shadowLayer = (a1,a2) => `0 1px 2px rgba(0,0,0,${a1}), 0 6px 16px rgba(0,0,0,${a2})`;
+const SHADOW = {
+  card:  () => shadowLayer(0.28, 0.18),
+  raised:() => shadowLayer(0.32, 0.24),
+  modal: (base) => `0 24px 60px ${base}`,
+};
+const FONT_DISPLAY = "'Cormorant Garamond',serif";
+
 // ── NOIR OSCURO — negro total, dorado ────────────────────────────────────────
 const DARK = {
   bgApp:        "#0A0909",
@@ -772,7 +782,7 @@ function OnboardingModal({ onClose, isDark }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:20, width:"100%", maxWidth:440,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:440,
         boxShadow:`0 32px 80px ${C.shadow}`,
         overflow:"hidden",
       }}>
@@ -995,7 +1005,7 @@ function HelpModal({ onClose, isDark }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:18, width:"100%", maxWidth:580,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:580,
         boxShadow:`0 32px 80px ${C.shadow}`,
         display:"flex", flexDirection:"column", maxHeight:"90dvh", overflow:"hidden",
       }}>
@@ -1680,7 +1690,7 @@ function useUndoable(initial) {
 
 function Btn({ onClick, children, style={}, title, variant="ghost", disabled=false }) {
   const base = {
-    border:"none", borderRadius:7, fontSize:12, fontWeight:600,
+    border:"none", borderRadius:RADIUS.sm, fontSize:12, fontWeight:600,
     display:"flex", alignItems:"center", gap:5,
     transition:"color .16s cubic-bezier(.16,1,.3,1), background-color .16s cubic-bezier(.16,1,.3,1), border-color .16s cubic-bezier(.16,1,.3,1), box-shadow .2s ease, transform .12s ease, opacity .16s ease",
     opacity:disabled?.5:1, cursor:disabled?"not-allowed":"pointer", ...style,
@@ -1727,9 +1737,9 @@ function Modal({ open, onClose, title, children, width=420 }) {
       display:"flex", alignItems:"center", justifyContent:"center", zIndex:1000, padding:16,
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
-        background:C.bgPanel, border:`1px solid ${C.borderBright}`, borderRadius:14,
+        background:C.bgPanel, border:`1px solid ${C.borderBright}`, borderRadius:RADIUS.lg,
         width:"100%", maxWidth:width, maxHeight:"90vh", overflowY:"auto",
-        boxShadow:`0 24px 60px ${C.shadow}`,
+        boxShadow:SHADOW.modal(C.shadow),
       }}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"16px 20px", borderBottom:`1px solid ${C.border}`}}>
@@ -2107,7 +2117,7 @@ function ProjectItem({ project, isActive, onSelect, onDelete, onRename, isDragOv
   return (
     <div draggable onDragStart={onDragStart} onDragOver={onDragOver} onDrop={onDrop} onDragEnd={onDragEnd}
       onClick={onSelect} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
-      style={{padding:"10px 12px", borderRadius:9, marginBottom:4, cursor:"pointer",
+      style={{padding:"10px 12px", borderRadius:RADIUS.sm, marginBottom:4, cursor:"pointer",
         background:isActive?C.bgActive:hover?C.bgCard:"transparent",
         border:isDragOver?`1.5px dashed ${C.accent}`:isActive?`1px solid ${C.borderBright}`:"1px solid transparent",
         transition:"all .12s", display:"flex", alignItems:"center", gap:8,
@@ -2252,8 +2262,8 @@ function CorkboardView({ blocks, characterColors, onReorder, onCardClick, onNote
               className="fade-in"
               style={{
                 background:C.bgCard, border:`1px solid ${isOver?C.accent:C.border}`,
-                borderRadius:11, padding:"12px 13px 11px", cursor:"pointer",
-                boxShadow:`0 1px 0 rgba(0,0,0,.3), 0 4px 14px ${C.shadow}`,
+                borderRadius:RADIUS.md, padding:"12px 13px 11px", cursor:"pointer",
+                boxShadow:SHADOW.card(),
                 transition:"border-color .12s, transform .12s, opacity .12s",
                 opacity:isOver?.6:1,
                 display:"flex", flexDirection:"column", gap:8, minHeight:130,
@@ -2618,8 +2628,8 @@ function MobileEditorHeader({ projectName, words, pages, scenes, saving,
           </rect>
         </svg>
         <div style={{flex:1, minWidth:0}}>
-          <div style={{fontSize:14, fontWeight:700, color:C.accent,
-            fontFamily:"'Courier Prime',monospace", overflow:"hidden",
+          <div style={{fontSize:17, fontWeight:600, color:C.textPrimary,
+            fontFamily:FONT_DISPLAY, overflow:"hidden",
             textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{projectName}</div>
           <div style={{fontSize:10, color:C.textMuted, marginTop:1}}>
             {words} palabras · ~{pages} pág · {scenes} escenas
@@ -4084,8 +4094,8 @@ function PlanoApp({ session, isDark, toggleTheme }) {
                   <div style={{padding:"8px 24px", background:C.bgApp,
                     borderBottom:`1px solid ${C.border}`,
                     display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", minHeight:36}}>
-                    <h1 style={{margin:0, fontSize:13, fontWeight:700, color:C.accent,
-                      fontFamily:"'Courier Prime',monospace", letterSpacing:.3,
+                    <h1 style={{margin:0, fontSize:18, fontWeight:600, color:C.textPrimary,
+                      fontFamily:FONT_DISPLAY, letterSpacing:.2,
                       overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:320}}>
                       {project?.name}
                     </h1>
