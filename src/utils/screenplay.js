@@ -1,4 +1,4 @@
-import { T, C } from "../design/tokens";
+import { T, C, CHARACTER_PALETTE } from "../design/tokens";
 
 export function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 

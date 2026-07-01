@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from "react";
-import { C, T, DARK, LIGHT } from "./design/tokens";
+import { C, T, DARK, LIGHT, FONT_DISPLAY } from "./design/tokens";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
 import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups } from "./utils/screenplay";
@@ -11,9 +11,9 @@ import { Btn, Modal } from "./components/common";
 import {
   ImportFountainModal, HistoryModal, OnboardingModal, TrashModal, HelpModal, ExportPDFModal,
 } from "./components/modals";
-import { LandingPage, AuthScreen } from "./components/landing";
+import { LandingPage, AuthScreen, WelcomeScreen } from "./components/landing";
 import { NavSidebar, MobileBottomNav, MobileEditorHeader } from "./components/nav";
-import { RightPanel, MobilePanel, CorkboardView } from "./components/panels";
+import { RightPanel, MobilePanel, CorkboardView, PanelContent } from "./components/panels";
 import { Toolbar, ScriptBlock } from "./components/editor";
 
 export const DEFAULT_PROJECT = () => ({
