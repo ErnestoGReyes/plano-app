@@ -3844,7 +3844,7 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   // guion se vea centrado en la pantalla completa y no solo en el espacio que le queda.
   const leftPanelsWidth = focusMode ? 0 : 64 + (navTab!=="editor" && navTab!=="corkboard" ? 240 : 0);
   const rightPanelsWidth = focusMode || navTab==="corkboard" ? 0 : 200;
-  const editorCenterOffset = isMobile || focusMode ? 0 : rightPanelsWidth - leftPanelsWidth;
+  const editorCenterOffset = isMobile || focusMode ? 0 : (rightPanelsWidth - leftPanelsWidth) / 2;
 
   const editorContent = loadError ? (
     <div style={{flex:1, display:"flex", alignItems:"center", justifyContent:"center",
@@ -3896,12 +3896,20 @@ function PlanoApp({ session, isDark, toggleTheme }) {
       justifyContent:isMobile||focusMode ? "flex-start" : "center",
     }}>
       <div style={isMobile||focusMode ? {maxWidth:focusMode?580:"100%", margin:"0 auto"} : {
-        width:"100%", maxWidth:880,
-        background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8,
+        width:"100%", maxWidth:880, position:"relative",
+        background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:2,
         padding:"36px 64px 48px",
-        boxShadow:`0 2px 0 rgba(0,0,0,.4), 0 8px 32px ${C.shadow}`,
+        boxShadow:`4px 4px 0 ${C.bgEditor}, 4px 4px 0 1px ${C.border}, `+
+                  `8px 8px 0 ${C.bgEditor}, 8px 8px 0 1px ${C.border}, 0 8px 32px ${C.shadow}`,
         marginLeft:editorCenterOffset, transition:"margin-left .2s",
       }}>
+        {!isMobile && !focusMode && (
+          <div style={{position:"absolute", top:16, right:20, fontSize:10.5,
+            color:C.textFaint, fontFamily:"'Courier Prime','Courier New',monospace",
+            letterSpacing:.5, userSelect:"none"}}>
+            {pages} {pages===1?"pág.":"págs."}
+          </div>
+        )}
         {!isMobile && !focusMode && (
           <div style={{position:"relative", marginLeft:-64}}>
             {blocks.map((block, index) => (
@@ -3954,6 +3962,14 @@ function PlanoApp({ session, isDark, toggleTheme }) {
           onMouseLeave={e=>e.currentTarget.style.color=C.textFaint}>
           + agregar elemento
         </div>
+
+        {!isMobile && !focusMode && (
+          <div style={{marginTop:40, paddingTop:16, borderTop:`1px solid ${C.border}`,
+            textAlign:"center", fontSize:10, letterSpacing:1.5, textTransform:"uppercase",
+            color:C.textFaint, fontFamily:"'Courier Prime','Courier New',monospace"}}>
+            {(project?.name||"Guion").toUpperCase()} · {pages} {pages===1?"página":"páginas"}
+          </div>
+        )}
       </div>
     </div>
   );
