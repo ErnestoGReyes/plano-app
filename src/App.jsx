@@ -3483,17 +3483,23 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     }
   }, []);
 
+  // Solo los bloques del proyecto activo — así el autoguardado no se reinicia
+  // cuando cambia otra cosa del array `projects` (rename, reorder, etc.)
+  const activeProjectBlocks = useMemo(
+    () => projects.find(x=>x.id===selectedId)?.blocks,
+    [projects, selectedId]
+  );
+
   useEffect(() => {
-    if (!selectedId || loadingProjects) return;
+    if (!selectedId || loadingProjects || !activeProjectBlocks) return;
     setSaving(true);
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
-      const p = projects.find(x=>x.id===selectedId);
-      if (p) await persistScript(p.id, p.blocks);
+      await persistScript(selectedId, activeProjectBlocks);
       setSaving(false);
     }, 1000);
     return () => clearTimeout(saveTimer.current);
-  }, [projects, selectedId, persistScript]);
+  }, [activeProjectBlocks, selectedId, loadingProjects, persistScript]);
 
   // Al recuperar conexión, reintentar cualquier guardado pendiente
   useEffect(() => {
@@ -3696,15 +3702,23 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     if (!error && data) {
       setProjects(prev => [data, ...prev]);
       setSelectedId(data.id);
+      setNewProjectName("");
+      setNewProjectModal(false);
+    } else {
+      console.error("Error al crear el guion:", error);
+      alert("No se pudo crear el guion. Probá de nuevo.");
     }
-    setNewProjectName("");
-    setNewProjectModal(false);
   };
 
   const deleteProject = async id => {
     if (!confirm("¿Mover este guion a la papelera?")) return;
     const now = new Date().toISOString();
-    await supabase.from("scripts").update({ deleted_at: now }).eq("id", id);
+    const { error } = await supabase.from("scripts").update({ deleted_at: now }).eq("id", id);
+    if (error) {
+      console.error("Error al mover a la papelera:", error);
+      alert("No se pudo mover el guion a la papelera. Probá de nuevo.");
+      return;
+    }
     const updated = projects.filter(p => p.id !== id);
     setProjects(updated);
     if (updated.length === 0) setSelectedId(null);
@@ -3727,15 +3741,30 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   };
 
   const restoreProject = async id => {
-    await supabase.from("scripts").update({ deleted_at: null }).eq("id", id);
-    const { data } = await supabase.from("scripts").select("id, name, blocks, updated_at").eq("id", id).single();
+    const { error: restoreError } = await supabase.from("scripts").update({ deleted_at: null }).eq("id", id);
+    if (restoreError) {
+      console.error("Error al restaurar el guion:", restoreError);
+      alert("No se pudo restaurar el guion. Probá de nuevo.");
+      return;
+    }
+    const { data, error } = await supabase.from("scripts").select("id, name, blocks, updated_at").eq("id", id).single();
+    if (error) {
+      console.error("Error al recargar el guion restaurado:", error);
+      alert("El guion se restauró, pero no se pudo recargar. Refrescá la página.");
+      return;
+    }
     if (data) setProjects(prev => [data, ...prev]);
     setTrashedProjects(prev => prev.filter(p => p.id !== id));
   };
 
   const deleteForever = async id => {
     if (!confirm("¿Eliminar definitivamente? No se puede recuperar.")) return;
-    await supabase.from("scripts").delete().eq("id", id);
+    const { error } = await supabase.from("scripts").delete().eq("id", id);
+    if (error) {
+      console.error("Error al eliminar definitivamente:", error);
+      alert("No se pudo eliminar el guion. Probá de nuevo.");
+      return;
+    }
     setTrashedProjects(prev => prev.filter(p => p.id !== id));
   };
 
@@ -3764,8 +3793,14 @@ function PlanoApp({ session, isDark, toggleTheme }) {
   }, [blocks, updateBlocks]);
 
   const renameProject = async (id, name) => {
+    const previous = projects.find(p => p.id===id)?.name;
     setProjects(prev => prev.map(p => p.id===id ? {...p, name} : p));
-    await supabase.from("scripts").update({ name }).eq("id", id);
+    const { error } = await supabase.from("scripts").update({ name }).eq("id", id);
+    if (error) {
+      console.error("Error al renombrar el guion:", error);
+      alert("No se pudo renombrar el guion. Se restauró el nombre anterior.");
+      setProjects(prev => prev.map(p => p.id===id ? {...p, name: previous} : p));
+    }
   };
 
   const signOut = async () => {
@@ -3782,8 +3817,11 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     if (!error && data) {
       setProjects(prev => [data, ...prev]);
       setSelectedId(data.id);
+      setShowImportModal(false);
+    } else {
+      console.error("Error al importar el guion:", error);
+      alert("No se pudo importar el guion. Probá de nuevo.");
     }
-    setShowImportModal(false);
   };
 
   const restoreVersion = async (blocks) => {
@@ -3791,9 +3829,9 @@ function PlanoApp({ session, isDark, toggleTheme }) {
     setProjects(prev => prev.map(p =>
       p.id===selectedId ? {...p, blocks} : p
     ));
-    await supabase.from("scripts")
-      .update({ blocks, updated_at: new Date().toISOString() })
-      .eq("id", selectedId);
+    // Reutiliza persistScript: ya maneja el respaldo local si falla el guardado
+    const ok = await persistScript(selectedId, blocks);
+    if (!ok) alert("La versión se restauró localmente, pero no se pudo guardar en el servidor todavía. Se reintentará.");
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────
