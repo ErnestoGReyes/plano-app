@@ -5,6 +5,25 @@ export function makeGlobalCss(C) { return `
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body,#root{height:100%;background:${C.bgApp};color:${C.textPrimary};font-family:'Inter',system-ui,sans-serif}
+  #root{position:relative; isolation:isolate}
+
+  /* ── Fondo con un poco de vida: degradé sutil + grano de película ──
+     Antes era un color plano; esto le suma profundidad sin competir con
+     el contenido (todo queda por debajo, con z-index negativo). */
+  #root::before{
+    content:"";
+    position:fixed; inset:0; z-index:-2; pointer-events:none;
+    background:
+      radial-gradient(ellipse 1100px 700px at 15% -8%, ${C.accent}14, transparent 60%),
+      radial-gradient(ellipse 900px 650px at 100% 105%, ${C.accentWarm}0d, transparent 62%);
+  }
+  #root::after{
+    content:"";
+    position:fixed; inset:-15%; z-index:-1; pointer-events:none;
+    width:130%; height:130%; opacity:.05; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    animation:grain 9s steps(8) infinite;
+  }
 
   /* ── Scrollbars noir ── */
   ::-webkit-scrollbar{width:7px;height:7px}
