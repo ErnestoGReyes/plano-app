@@ -1,5 +1,5 @@
 import { useState, memo } from "react";
-import { C, DARK, T, RADIUS, FONT_DISPLAY, hexToRgb } from "../design/tokens";
+import { C, DARK, T, RADIUS, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
@@ -24,9 +24,10 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
       padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46,
       ...grainStyle(C.bgApp===DARK.bgApp)}}>
 
-      {/* Nombre de proyecto — antes solo se veía en mobile, acá le da identidad al toolbar de escritorio */}
+      {/* Nombre de proyecto — Inter, no Cormorant: FONT_DISPLAY es para headlines
+          editoriales (landing, estados vacíos), no para chrome funcional como este */}
       {projectName && (
-        <div style={{fontFamily:FONT_DISPLAY, fontSize:16, fontWeight:600, color:C.textPrimary,
+        <div style={{fontFamily:"'Inter',system-ui,sans-serif", fontSize:15, fontWeight:600, color:C.textPrimary,
           marginRight:14, paddingRight:14, borderRight:`1px solid ${C.border}`,
           whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:220}}>
           {projectName}

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, T, RADIUS, FONT_DISPLAY, hexToRgb } from "../design/tokens";
+import { C, T, RADIUS, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { grainStyle } from "../styles/globalStyles";
@@ -199,8 +199,8 @@ export function MobileEditorHeader({ projectName, words, pages, scenes, saving,
           </rect>
         </svg>
         <div style={{flex:1, minWidth:0}}>
-          <div style={{fontSize:17, fontWeight:600, color:C.textPrimary,
-            fontFamily:FONT_DISPLAY, overflow:"hidden",
+          <div style={{fontSize:16, fontWeight:600, color:C.textPrimary,
+            fontFamily:"'Inter',system-ui,sans-serif", overflow:"hidden",
             textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{projectName}</div>
           <div style={{fontSize:10, color:C.textMuted, marginTop:1}}>
             {words} palabras · ~{pages} pág · {scenes} escenas
