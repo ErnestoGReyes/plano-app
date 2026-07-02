@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from "react";
-import { C, T, DARK, LIGHT, FONT_DISPLAY } from "./design/tokens";
+import { C, T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb } from "./design/tokens";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
 import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups } from "./utils/screenplay";
@@ -400,6 +400,15 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
   // ── Derivados ──────────────────────────────────────────────────────────────
   const characters = useMemo(() => extractCharacters(blocks), [blocks]);
   const scenes = useMemo(() => extractScenes(blocks), [blocks]);
+  // Escena "actual" = la última cuyo encabezado quedó en o antes del cursor,
+  // no solo cuando el cursor está literalmente sobre esa línea de encabezado.
+  const currentSceneIdx = useMemo(() => {
+    let idx = -1;
+    for (let i = 0; i < scenes.length; i++) {
+      if (scenes[i].index <= activeIndex) idx = i; else break;
+    }
+    return idx;
+  }, [scenes, activeIndex]);
   const words = useMemo(() => countWords(blocks), [blocks]);
   const pages = useMemo(() => estimatePages(blocks), [blocks]);
   const characterColors = useMemo(() => {
@@ -955,29 +964,31 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
                         Sin escenas aún
                       </div>
                     </div>
-                  ) : scenes.map((s, i) => (
+                  ) : scenes.map((s, i) => {
+                    const isCurrent = i === currentSceneIdx;
+                    return (
                     <div key={s.id} onClick={()=>scrollToBlock(s.index)}
                       style={{
-                        padding:"7px 0 7px 12px",
-                        borderLeft:`2px solid ${s.index===activeIndex?C.accent:"transparent"}`,
-                        background:s.index===activeIndex?C.bgActive:"transparent",
+                        padding:"7px 10px 7px 12px", margin:"0 6px 2px",
+                        borderRadius:RADIUS.xs,
+                        borderLeft:`2px solid ${isCurrent?C.accent:"transparent"}`,
+                        background:isCurrent?`rgba(${hexToRgb(C.accent)},.14)`:"transparent",
                         cursor:"pointer", transition:"all .12s",
-                        marginBottom:2,
                       }}
-                      onMouseEnter={e=>{if(s.index!==activeIndex)e.currentTarget.style.background=C.bgCard}}
-                      onMouseLeave={e=>{if(s.index!==activeIndex)e.currentTarget.style.background="transparent"}}>
+                      onMouseEnter={e=>{if(!isCurrent)e.currentTarget.style.background=C.bgCard}}
+                      onMouseLeave={e=>{if(!isCurrent)e.currentTarget.style.background="transparent"}}>
                       <div style={{fontSize:9, fontFamily:"'Courier Prime',monospace",
-                        color:s.index===activeIndex?C.accent:C.textMuted,
-                        fontWeight:s.index===activeIndex?700:400,
+                        color:isCurrent?C.accent:C.textMuted,
+                        fontWeight:isCurrent?700:400,
                         overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
                         paddingRight:10, letterSpacing:.3}}>
                         {s.text||"Sin título"}
                       </div>
-                      <div style={{fontSize:8, color:C.textFaint, marginTop:2}}>
+                      <div style={{fontSize:8, color:isCurrent?C.accentWarm:C.textFaint, marginTop:2}}>
                         Esc. {i+1} · p.{Math.ceil((s.index+1)/2)}
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
             )}

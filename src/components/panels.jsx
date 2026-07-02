@@ -102,7 +102,7 @@ export function PanelContent({ tab, projects, selectedId, onSelectProject, onNew
           onReorder={onReorderProjects} onOpenTrash={onOpenTrash}/>
       )}
       {tab==="scenes" && (
-        <ScenesPanel scenes={scenes} onSceneClick={onSceneClick}/>
+        <ScenesPanel scenes={scenes} onSceneClick={onSceneClick} activeBlock={activeBlock}/>
       )}
       {tab==="corkboard" && (
         <CorkboardView blocks={blocks} characterColors={characterColors}
@@ -237,7 +237,18 @@ export function EmptyState({ icon, title, desc }) {
   );
 }
 
-export function ScenesPanel({ scenes, onSceneClick }) {
+export function ScenesPanel({ scenes, onSceneClick, activeBlock }) {
+  // La escena "actual" es la última cuyo encabezado quedó en o antes del
+  // cursor — no solo cuando el cursor está literalmente sobre esa línea,
+  // sino en cualquier bloque (acción, diálogo, etc.) dentro de esa escena.
+  let currentSceneIdx = -1;
+  if (typeof activeBlock === "number") {
+    for (let i = 0; i < scenes.length; i++) {
+      if (scenes[i].index <= activeBlock) currentSceneIdx = i;
+      else break;
+    }
+  }
+
   return (
     <div>
       <p style={{fontSize:10, color:C.textMuted, textTransform:"uppercase", letterSpacing:1.5,
@@ -247,24 +258,37 @@ export function ScenesPanel({ scenes, onSceneClick }) {
           title="Sin escenas todavía"
           desc="Escribí INT. o EXT. para crear la primera."/>
       )}
-      {scenes.map((s,i) => (
-        <div key={s.id} onClick={()=>onSceneClick(s.index)}
-          style={{padding:"10px 12px", marginBottom:4, borderRadius:RADIUS.sm,
-            background:C.bgCard, border:`1px solid ${C.border}`,
-            cursor:"pointer", transition:"border-color .14s,background .14s"}}
-          onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.background=C.bgCardHover}}
-          onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.bgCard}}>
-          <div style={{display:"flex", alignItems:"center", gap:7}}>
-            <span style={{fontSize:10, fontWeight:700, color:C.accentWarm,
-              background:"rgba(232,131,74,.12)", padding:"2px 7px", borderRadius:RADIUS.xs,
-              flexShrink:0, minWidth:26, textAlign:"center"}}>{i+1}</span>
-            <span style={{fontSize:12, color:C.textSec, overflow:"hidden",
-              textOverflow:"ellipsis", whiteSpace:"nowrap", fontFamily:"'Courier Prime',monospace"}}>
-              {s.text||"Sin título"}
-            </span>
+      {scenes.map((s,i) => {
+        const isCurrent = i === currentSceneIdx;
+        return (
+          <div key={s.id} onClick={()=>onSceneClick(s.index)}
+            style={{padding:"10px 12px", marginBottom:4, borderRadius:RADIUS.sm,
+              background:isCurrent ? `rgba(${hexToRgb(C.accentWarm)},.16)` : C.bgCard,
+              border:`1px solid ${isCurrent ? C.accentWarm : C.border}`,
+              cursor:"pointer", transition:"border-color .14s,background .14s"}}
+            onMouseEnter={e=>{if(!isCurrent){e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.background=C.bgCardHover}}}
+            onMouseLeave={e=>{if(!isCurrent){e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.bgCard}}}>
+            <div style={{display:"flex", alignItems:"center", gap:7}}>
+              <span style={{fontSize:11, fontWeight:700,
+                color:isCurrent ? C.bgApp : C.accentWarm,
+                background:isCurrent ? C.accentWarm : `rgba(${hexToRgb(C.accentWarm)},.18)`,
+                border:`1px solid rgba(${hexToRgb(C.accentWarm)},.35)`,
+                padding:"3px 9px", borderRadius:RADIUS.sm,
+                flexShrink:0, minWidth:30, textAlign:"center"}}>{i+1}</span>
+              <span style={{fontSize:12, color:isCurrent ? C.textPrimary : C.textSec,
+                fontWeight:isCurrent ? 700 : 400,
+                overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap",
+                fontFamily:"'Courier Prime',monospace"}}>
+                {s.text||"Sin título"}
+              </span>
+            </div>
+            <div style={{fontSize:9.5, color:isCurrent ? C.accentWarm : C.textFaint,
+              marginTop:3, paddingLeft:1}}>
+              Esc. {i+1} · p.{Math.ceil((s.index+1)/2)}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
