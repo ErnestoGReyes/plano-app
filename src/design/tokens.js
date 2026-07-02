@@ -17,10 +17,27 @@ export const CHARACTER_PALETTE = [
 ];
 
 export const RADIUS = { xs:4, sm:8, md:12, lg:16, pill:20 };
-export const shadowLayer = (a1,a2) => `0 1px 2px rgba(0,0,0,${a1}), 0 6px 16px rgba(0,0,0,${a2})`;
+
+// Escala tipográfica — usar estos valores en vez de números sueltos (8.5, 9, 11, 13...)
+// para que el tamaño de cada texto responda a una jerarquía consistente en toda la app.
+export const FONT_SIZE = {
+  xs: 10,      // labels de nav, badges de tipo de bloque
+  sm: 11,      // metadata, contadores, tooltips
+  base: 13,    // texto de UI por defecto (botones, items de lista)
+  md: 14,      // cuerpo de párrafo, texto de bloque de guion
+  lg: 17,      // títulos de tarjeta / nombre de proyecto en toolbar
+  xl: 24,      // títulos de modal / sección
+  display: 40, // headlines grandes (landing, estados vacíos)
+};
+
+// Sombras con tinte cálido (marrón oscuro) en vez de negro puro — sobre un fondo
+// ya casi negro, una sombra 100% negra no se distingue; el tinte da sensación de
+// profundidad ambiental en vez de "hueco".
+export const shadowLayer = (a1, a2, tint = "18,12,4") =>
+  `0 1px 2px rgba(${tint},${a1}), 0 6px 16px rgba(${tint},${a2})`;
 export const SHADOW = {
-  card:  () => shadowLayer(0.28, 0.18),
-  raised:() => shadowLayer(0.32, 0.24),
+  card:  () => shadowLayer(0.32, 0.22),
+  raised:() => shadowLayer(0.36, 0.28),
   modal: (base) => `0 24px 60px ${base}`,
 };
 export const FONT_DISPLAY = "'Cormorant Garamond',serif";
@@ -48,7 +65,7 @@ export const DARK = {
   textMuted:    "#7F7563",   // antes #4A4438 (contraste 2.06 → ahora 4.38)
   textFaint:    "#4A4438",   // antes #252018 (contraste 1.23 → ahora 2.06)
   white:        "#F0E8D8",
-  shadow:       "rgba(0,0,0,0.85)",
+  shadow:       "rgba(18,12,4,0.88)",   // tinte cálido, no negro puro
 };
 
 // ── NOIR DÍA — papel, tinta, dorado oscuro ───────────────────────────────────
@@ -74,7 +91,7 @@ export const LIGHT = {
   textMuted:    "#8A7860",   // tinta suave
   textFaint:    "#C8B898",   // muy suave
   white:        "#F8F4EC",
-  shadow:       "rgba(0,0,0,0.15)",
+  shadow:       "rgba(60,45,20,0.18)",  // tinte cálido, no negro puro
 };
 
 // C es un objeto mutable: PlanoApp hace Object.assign(C, isDark ? DARK : LIGHT)

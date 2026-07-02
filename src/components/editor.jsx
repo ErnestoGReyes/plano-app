@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C, T, hexToRgb } from "../design/tokens";
+import { C, T, FONT_DISPLAY, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
@@ -10,7 +10,7 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
     {type:T.SCENE,      label:"Escena",    short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     label:"Acción",    short:"ACC", color:C.textSec},
     {type:T.CHARACTER,  label:"Personaje", short:"PER", color:C.green},
-    {type:T.PAREN,      label:"Acotación", short:"ACO", color:"#C0A060"},
+    {type:T.PAREN,      label:"Acotación", short:"ACO", color:C.accent},
     {type:T.DIALOGUE,   label:"Diálogo",   short:"DIA", color:C.accent},
     {type:T.TRANSITION, label:"Transición",short:"TRA", color:C.purple},
   ];
@@ -21,6 +21,15 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
   return (
     <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
       padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46}}>
+
+      {/* Nombre de proyecto — antes solo se veía en mobile, acá le da identidad al toolbar de escritorio */}
+      {projectName && (
+        <div style={{fontFamily:FONT_DISPLAY, fontSize:16, fontWeight:600, color:C.textPrimary,
+          marginRight:14, paddingRight:14, borderRight:`1px solid ${C.border}`,
+          whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", maxWidth:220}}>
+          {projectName}
+        </div>
+      )}
 
       {/* Tipos de bloque */}
       <div style={{display:"flex", gap:2, flexWrap:"nowrap", overflowX:"auto",
@@ -100,7 +109,7 @@ export function ScriptBlock({ block, index, isActive, characterColors, onUpdate,
     [T.SCENE]:      {...base, fontWeight:700, color:C.accentWarm, textTransform:"uppercase", letterSpacing:.5},
     [T.ACTION]:     {...base, color:"#C5D0E6"},
     [T.CHARACTER]:  {...base, textAlign:"center", fontWeight:700, textTransform:"uppercase", color},
-    [T.PAREN]:      {...base, paddingLeft:isMobile?"18%":"26%", paddingRight:isMobile?"18%":"26%", color:"#C0A060", fontStyle:"italic"},
+    [T.PAREN]:      {...base, paddingLeft:isMobile?"18%":"26%", paddingRight:isMobile?"18%":"26%", color:C.accent, fontStyle:"italic"},
     [T.DIALOGUE]:   {...base, paddingLeft:isMobile?"10%":"18%", paddingRight:isMobile?"10%":"18%", color:C.textPrimary},
     [T.TRANSITION]: {...base, textAlign:"right", fontWeight:700, textTransform:"uppercase", color:C.purple},
   };

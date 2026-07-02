@@ -14,6 +14,12 @@ export function makeGlobalCss(C) { return `
   * { scrollbar-width: thin; scrollbar-color: ${C.borderBright} transparent; }
 
   textarea:focus,input:focus{outline:none}
+  /* :focus-visible = solo se ve navegando con teclado (Tab), no al clickear con mouse */
+  textarea:focus-visible,input:focus-visible,button:focus-visible,a:focus-visible,[tabindex]:focus-visible{
+    outline:2px solid ${C.accent};
+    outline-offset:2px;
+    border-radius:4px;
+  }
   button{cursor:pointer;font-family:inherit}
   input{font-family:inherit}
   mark{background:${C.accentGlow};color:${C.accent};border-radius:2px;padding:0 1px}

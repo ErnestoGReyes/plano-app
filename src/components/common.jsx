@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { C, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { C, RADIUS, SHADOW, FONT_DISPLAY, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 
 export function Btn({ onClick, children, style={}, title, variant="ghost", disabled=false }) {
@@ -57,7 +57,7 @@ export function Modal({ open, onClose, title, children, width=420 }) {
       }}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"16px 20px", borderBottom:`1px solid ${C.border}`}}>
-          <span style={{fontWeight:700, fontSize:15, color:C.textPrimary}}>{title}</span>
+          <span style={{fontFamily:FONT_DISPLAY, fontWeight:600, fontSize:17, color:C.textPrimary}}>{title}</span>
           <Btn onClick={onClose} style={{padding:"5px 7px", color:C.textMuted}}><Icons.Close/></Btn>
         </div>
         <div style={{padding:20}}>{children}</div>
