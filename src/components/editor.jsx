@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { C, T, RADIUS, FONT_DISPLAY, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
@@ -90,7 +90,7 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
   );
 }
 
-export function ScriptBlock({ block, index, isActive, characterColors, onUpdate, onFocus,
+function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, onFocus,
   onKeyDown, inputRef, charSuggestions, onAcceptSuggestion, isMobile,
   onAddBlockAfter, onDeleteBlock }) {
   const color = characterColors[block.text?.trim()?.toUpperCase()] || C.green;
@@ -165,7 +165,7 @@ export function ScriptBlock({ block, index, isActive, characterColors, onUpdate,
         onBlur={()=>setTimeout(()=>setShowSug(false),150)}
         onKeyDown={e=>{
           if (showSug && e.key==="ArrowDown" && charSuggestions.length>0) {
-            e.preventDefault(); onAcceptSuggestion(charSuggestions[0]); setShowSug(false); return;
+            e.preventDefault(); onAcceptSuggestion(index, charSuggestions[0]); setShowSug(false); return;
           }
           if (showSug && e.key==="Escape") { setShowSug(false); return; }
           onKeyDown(e, index);
@@ -180,7 +180,7 @@ export function ScriptBlock({ block, index, isActive, characterColors, onUpdate,
           background:C.bgPanel, border:`1px solid ${C.borderBright}`, borderRadius:RADIUS.sm,
           boxShadow:"0 8px 24px rgba(0,0,0,.5)", overflow:"hidden", minWidth:160}}>
           {charSuggestions.slice(0,5).map(name => (
-            <div key={name} onClick={()=>{onAcceptSuggestion(name);setShowSug(false);}}
+            <div key={name} onClick={()=>{onAcceptSuggestion(index, name);setShowSug(false);}}
               style={{padding:"10px 14px", fontSize:13, color:characterColors[name]||C.green,
                 fontFamily:"'Courier Prime',monospace", fontWeight:600, cursor:"pointer", transition:"background .1s"}}
               onMouseEnter={e=>e.currentTarget.style.background=C.bgCard}
@@ -213,3 +213,21 @@ export function ScriptBlock({ block, index, isActive, characterColors, onUpdate,
     </div>
   );
 }
+
+// Memoizado: en un guion largo (miles de bloques), sin esto cada tecla que se
+// tipea re-renderiza TODOS los bloques en pantalla, no solo el que se edita.
+// La comparación es a mano en vez de la default (shallow de todas las props)
+// porque `onUpdate`, `onFocus`, etc. son estables (useCallback en App.jsx) y
+// `inputRef` cambia de referencia en cada render sin afectar lo que se ve —
+// compararlas rompería el memo para todos los bloques igual.
+function scriptBlockPropsEqual(prev, next) {
+  return (
+    prev.block === next.block &&
+    prev.isActive === next.isActive &&
+    prev.isMobile === next.isMobile &&
+    prev.characterColors === next.characterColors &&
+    prev.charSuggestions === next.charSuggestions
+  );
+}
+
+export const ScriptBlock = memo(ScriptBlockImpl, scriptBlockPropsEqual);

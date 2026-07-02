@@ -16,6 +16,10 @@ import { NavSidebar, MobileBottomNav, MobileEditorHeader } from "./components/na
 import { RightPanel, MobilePanel, CorkboardView, PanelContent } from "./components/panels";
 import { Toolbar, ScriptBlock } from "./components/editor";
 
+// Referencia estable — evita pasar un array [] nuevo en cada render a los bloques
+// inactivos, lo que rompería la memoización de ScriptBlock (ver editor.jsx).
+const EMPTY_SUGGESTIONS = [];
+
 export const DEFAULT_PROJECT = () => ({
   id: uid(), name: "Mi Primer Guion", createdAt: Date.now(),
   blocks: [
@@ -721,8 +725,8 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
                 isActive={index===activeIndex} characterColors={characterColors}
                 onUpdate={updateBlock} onFocus={setActiveIndex}
                 onKeyDown={handleKeyDown} isMobile={isMobile}
-                charSuggestions={index===activeIndex ? charSuggestions : []}
-                onAcceptSuggestion={name=>updateBlock(index,name)}
+                charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
+                onAcceptSuggestion={updateBlock}
                 onAddBlockAfter={addBlockAfter}
                 onDeleteBlock={deleteBlock}
                 inputRef={el=>{
@@ -737,8 +741,8 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
             isActive={index===activeIndex} characterColors={characterColors}
             onUpdate={updateBlock} onFocus={setActiveIndex}
             onKeyDown={handleKeyDown} isMobile={isMobile}
-            charSuggestions={index===activeIndex ? charSuggestions : []}
-            onAcceptSuggestion={name=>updateBlock(index,name)}
+            charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
+            onAcceptSuggestion={updateBlock}
             onAddBlockAfter={addBlockAfter}
             onDeleteBlock={deleteBlock}
             inputRef={el=>{
