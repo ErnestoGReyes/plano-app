@@ -25,18 +25,22 @@ export function makeGlobalCss(C, isDark) { return `
      Textura "papel + máquina de escribir": grano fino de fondo (feTurbulence)
      + dos capas de puntitos a distinta escala/offset simulando la tinta
      desigual de los tipos — no un ruido parejo, sino manchitas irregulares.
-     multiply en modo día (las manchas oscurecen el papel, como tinta real);
-     overlay en modo noche (agrega motas de luz/polvo sin lavar el negro). */
+     "screen" en modo noche: agrega motas de LUZ sobre el negro — "overlay"
+     casi no hace nada contra un fondo tan oscuro (#0A0909), es matemáticamente
+     débil en los extremos (negro o blanco puro). "multiply" en modo día
+     agrega motas de TINTA sobre el papel claro. Los puntitos también cambian
+     de color según el tema — blancos de noche, negros de día — si no, en modo
+     noche quedan puntitos negros invisibles sobre fondo negro. */
   #root::after{
     content:"";
     position:fixed; inset:-15%; z-index:9999; pointer-events:none;
     width:130%; height:130%;
-    opacity:${isDark ? .11 : .17};
-    mix-blend-mode:${isDark ? "overlay" : "multiply"};
+    opacity:${isDark ? .16 : .17};
+    mix-blend-mode:${isDark ? "screen" : "multiply"};
     background-image:
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
-      radial-gradient(circle, rgba(0,0,0,.5) .6px, transparent .7px),
-      radial-gradient(circle, rgba(0,0,0,.32) .4px, transparent .5px);
+      radial-gradient(circle, ${isDark ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.5)"} .6px, transparent .7px),
+      radial-gradient(circle, ${isDark ? "rgba(255,255,255,.35)" : "rgba(0,0,0,.32)"} .4px, transparent .5px);
     background-size: 160px 160px, 5px 5px, 8px 8px;
     background-position: 0 0, 0 0, 2px 3px;
     animation:grain 9s steps(8) infinite;
