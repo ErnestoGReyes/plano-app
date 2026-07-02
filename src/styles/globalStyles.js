@@ -17,9 +17,13 @@ export function makeGlobalCss(C) { return `
       radial-gradient(ellipse 1100px 700px at 15% -8%, ${C.accent}14, transparent 60%),
       radial-gradient(ellipse 900px 650px at 100% 105%, ${C.accentWarm}0d, transparent 62%);
   }
+  /* z-index alto (no negativo): en negativo queda TAPADO por los fondos
+     opacos de sidebar/editor/panel, que se pintan por encima de él dentro
+     del mismo stacking context. Con mix-blend-mode + pointer-events:none
+     se ve por arriba de todo sin interferir con clicks ni tapar contenido. */
   #root::after{
     content:"";
-    position:fixed; inset:-15%; z-index:-1; pointer-events:none;
+    position:fixed; inset:-15%; z-index:9999; pointer-events:none;
     width:130%; height:130%; opacity:.05; mix-blend-mode:overlay;
     background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
     animation:grain 9s steps(8) infinite;

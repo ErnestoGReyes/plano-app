@@ -273,7 +273,7 @@ export function ScenesPanel({ scenes, onSceneClick, activeBlock }) {
                 color:isCurrent ? C.bgApp : C.accentWarm,
                 background:isCurrent ? C.accentWarm : `rgba(${hexToRgb(C.accentWarm)},.18)`,
                 border:`1px solid rgba(${hexToRgb(C.accentWarm)},.35)`,
-                padding:"3px 9px", borderRadius:RADIUS.sm,
+                padding:"3px 10px", borderRadius:RADIUS.pill,
                 flexShrink:0, minWidth:30, textAlign:"center"}}>{i+1}</span>
               <span style={{fontSize:12, color:isCurrent ? C.textPrimary : C.textSec,
                 fontWeight:isCurrent ? 700 : 400,

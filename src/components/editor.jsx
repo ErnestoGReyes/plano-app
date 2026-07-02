@@ -107,7 +107,7 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
 
   const styles = {
     [T.SCENE]:      {...base, fontWeight:700, color:C.accentWarm, textTransform:"uppercase", letterSpacing:.5},
-    [T.ACTION]:     {...base, color:"#C5D0E6"},
+    [T.ACTION]:     {...base, color:C.textSec},
     [T.CHARACTER]:  {...base, textAlign:"center", fontWeight:700, textTransform:"uppercase", color},
     [T.PAREN]:      {...base, paddingLeft:isMobile?"18%":"26%", paddingRight:isMobile?"18%":"26%", color:C.accent, fontStyle:"italic"},
     [T.DIALOGUE]:   {...base, paddingLeft:isMobile?"10%":"18%", paddingRight:isMobile?"10%":"18%", color:C.textPrimary},
