@@ -65,7 +65,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
 
       {/* Ayuda */}
       <button onClick={onHelp} title="Guía de elementos del guion"
-        style={{padding:"8px", borderRadius:8, border:"none", background:"none",
+        style={{padding:"8px", borderRadius:RADIUS.sm, border:"none", background:"none",
           color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
           display:"flex", alignItems:"center", justifyContent:"center", width:"100%"}}
         onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
@@ -75,7 +75,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
 
       {/* Tour */}
       <button onClick={onOnboarding} title="Ver introducción"
-        style={{padding:"6px", borderRadius:8, border:"none", background:"none",
+        style={{padding:"6px", borderRadius:RADIUS.sm, border:"none", background:"none",
           color:C.textFaint, cursor:"pointer", transition:"color .15s, background .15s",
           display:"flex", alignItems:"center", justifyContent:"center", width:"100%",
           fontSize:13}}
@@ -86,7 +86,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
 
       {/* Theme toggle */}
       <button onClick={onToggleTheme} title={isDark ? "Modo día" : "Modo noche"}
-        style={{padding:"8px", borderRadius:8, border:"none", background:"none",
+        style={{padding:"8px", borderRadius:RADIUS.sm, border:"none", background:"none",
           color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
           display:"flex", alignItems:"center", justifyContent:"center", width:"100%"}}
         onMouseEnter={e=>{e.currentTarget.style.color=C.textSec;e.currentTarget.style.background=C.bgCard}}
@@ -96,7 +96,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
 
       {/* User avatar + sign out */}
       <button onClick={onSignOut} title={`Cerrar sesión (${userEmail})`}
-        style={{padding:"7px", borderRadius:8, border:"none", background:"none",
+        style={{padding:"7px", borderRadius:RADIUS.sm, border:"none", background:"none",
           cursor:"pointer", transition:"background .15s", width:"100%",
           display:"flex", alignItems:"center", justifyContent:"center"}}
         onMouseEnter={e=>e.currentTarget.style.background="rgba(240,96,96,.1)"}
@@ -213,12 +213,12 @@ export function MobileEditorHeader({ projectName, words, pages, scenes, saving,
         </button>
         <div style={{position:"relative"}}>
           <button onClick={()=>setShowExport(v=>!v)} style={{background:"none",border:`1px solid ${C.borderBright}`,
-            borderRadius:7,color:C.textSec,cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center"}}>
+            borderRadius:RADIUS.sm,color:C.textSec,cursor:"pointer",padding:"6px 8px",display:"flex",alignItems:"center"}}>
             <Icons.Export/>
           </button>
           {showExport && (
             <div style={{position:"absolute",right:0,top:"calc(100% + 6px)",background:C.bgPanel,
-              border:`1px solid ${C.borderBright}`,borderRadius:9,padding:6,
+              border:`1px solid ${C.borderBright}`,borderRadius:RADIUS.sm,padding:6,
               zIndex:300,minWidth:180,boxShadow:`0 12px 32px ${C.shadow}`}}>
               {[
                 {label:"PDF",Icon:Icons.PDF,fn:()=>{onExport();setShowExport(false);}},
@@ -227,7 +227,7 @@ export function MobileEditorHeader({ projectName, words, pages, scenes, saving,
                 <button key={item.label} onClick={item.fn} style={{
                   display:"flex",alignItems:"center",gap:8,width:"100%",padding:"10px 14px",
                   background:"none",border:"none",color:C.textSec,fontSize:13,
-                  textAlign:"left",cursor:"pointer",borderRadius:6,fontFamily:"inherit"}}
+                  textAlign:"left",cursor:"pointer",borderRadius:RADIUS.sm,fontFamily:"inherit"}}
                   onMouseEnter={e=>e.currentTarget.style.background=C.bgCard}
                   onMouseLeave={e=>e.currentTarget.style.background="none"}>
                   <item.Icon/>{item.label}
@@ -245,7 +245,7 @@ export function MobileEditorHeader({ projectName, words, pages, scenes, saving,
           const on = activeType===t.type;
           return (
             <button key={t.type} onClick={()=>onTypeChange(t.type)}
-              style={{padding:"6px 12px", borderRadius:20, fontSize:11, fontWeight:on?700:500,
+              style={{padding:"6px 12px", borderRadius:RADIUS.pill, fontSize:11, fontWeight:on?700:500,
                 background:on?`rgba(${hexToRgb(t.color)},.18)`:"transparent",
                 border:on?`1px solid rgba(${hexToRgb(t.color)},.5)`:`1px solid ${C.border}`,
                 color:on?t.color:C.textMuted, whiteSpace:"nowrap", fontFamily:"inherit",

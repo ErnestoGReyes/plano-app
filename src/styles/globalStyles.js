@@ -45,6 +45,8 @@ export function makeGlobalCss(C) { return `
 
   /* ── Estados vacíos ── */
   @keyframes emptyFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  .spinner{animation:spin .9s linear infinite}
   .empty-float{animation:emptyFloat 3.5s ease-in-out infinite}
 
   /* ── Nav buttons ── */

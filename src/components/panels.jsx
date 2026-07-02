@@ -147,11 +147,11 @@ export function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete,
       <div style={{display:"flex", gap:6, marginBottom:12}}>
         <input value={search} onChange={e=>setSearch(e.target.value)}
           placeholder="Buscar guion..."
-          style={{flex:1, background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:8,
+          style={{flex:1, background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:RADIUS.sm,
             padding:"8px 10px", color:C.textSec, fontSize:13, outline:"none"}}
           onFocus={e=>e.target.style.borderColor=C.accent}
           onBlur={e=>e.target.style.borderColor=C.border}/>
-        <Btn onClick={onNew} variant="primary" style={{padding:"7px 10px", borderRadius:8}}><Icons.Plus/></Btn>
+        <Btn onClick={onNew} variant="primary" style={{padding:"7px 10px", borderRadius:RADIUS.sm}}><Icons.Plus/></Btn>
       </div>
       {filtered.map(p => (
         <ProjectItem key={p.id} project={p} isActive={p.id===selectedId}
@@ -167,7 +167,7 @@ export function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete,
       {/* Papelera */}
       <button onClick={onOpenTrash} style={{
         display:"flex", alignItems:"center", gap:7, width:"100%",
-        marginTop:10, padding:"8px 10px", borderRadius:8, border:"none",
+        marginTop:10, padding:"8px 10px", borderRadius:RADIUS.sm, border:"none",
         background:"none", color:C.textMuted, fontSize:12, cursor:"pointer",
         fontFamily:"inherit", transition:"color .15s, background .15s",
       }}
@@ -202,7 +202,7 @@ export function ProjectItem({ project, isActive, onSelect, onDelete, onRename, i
         <input autoFocus value={name} onChange={e=>setName(e.target.value)}
           onBlur={commit} onClick={e=>e.stopPropagation()}
           onKeyDown={e=>{if(e.key==="Enter")commit();if(e.key==="Escape"){setName(project.name);setEditing(false);}}}
-          style={{flex:1, background:C.bgApp, border:`1px solid ${C.accent}`, borderRadius:5,
+          style={{flex:1, background:C.bgApp, border:`1px solid ${C.accent}`, borderRadius:RADIUS.xs,
             padding:"2px 6px", color:C.textPrimary, fontSize:13, outline:"none"}}/>
       ) : (
         <span style={{flex:1, fontSize:13, color:isActive?C.textPrimary:C.textSec,
@@ -249,14 +249,14 @@ export function ScenesPanel({ scenes, onSceneClick }) {
       )}
       {scenes.map((s,i) => (
         <div key={s.id} onClick={()=>onSceneClick(s.index)}
-          style={{padding:"10px 12px", marginBottom:4, borderRadius:8,
+          style={{padding:"10px 12px", marginBottom:4, borderRadius:RADIUS.sm,
             background:C.bgCard, border:`1px solid ${C.border}`,
             cursor:"pointer", transition:"border-color .14s,background .14s"}}
           onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent;e.currentTarget.style.background=C.bgCardHover}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;e.currentTarget.style.background=C.bgCard}}>
           <div style={{display:"flex", alignItems:"center", gap:7}}>
             <span style={{fontSize:10, fontWeight:700, color:C.accentWarm,
-              background:"rgba(232,131,74,.12)", padding:"2px 7px", borderRadius:4,
+              background:"rgba(232,131,74,.12)", padding:"2px 7px", borderRadius:RADIUS.xs,
               flexShrink:0, minWidth:26, textAlign:"center"}}>{i+1}</span>
             <span style={{fontSize:12, color:C.textSec, overflow:"hidden",
               textOverflow:"ellipsis", whiteSpace:"nowrap", fontFamily:"'Courier Prime',monospace"}}>
@@ -344,11 +344,11 @@ export function CorkboardView({ blocks, characterColors, onReorder, onCardClick,
               {/* Header: número + pin de drag + INT/EXT · DÍA/NOCHE */}
               <div style={{display:"flex", alignItems:"center", gap:6}}>
                 <span style={{fontSize:9.5, fontWeight:700, color:C.accentWarm,
-                  background:"rgba(232,131,74,.12)", padding:"2px 6px", borderRadius:4,
+                  background:"rgba(232,131,74,.12)", padding:"2px 6px", borderRadius:RADIUS.xs,
                   flexShrink:0}}>{i+1}</span>
                 {meta.intExt && (
                   <span style={{fontSize:8.5, fontWeight:700, letterSpacing:.5, color:C.green,
-                    background:`rgba(${hexToRgb(C.green)},.12)`, padding:"2px 6px", borderRadius:4}}>
+                    background:`rgba(${hexToRgb(C.green)},.12)`, padding:"2px 6px", borderRadius:RADIUS.xs}}>
                     {meta.intExt}
                   </span>
                 )}
@@ -356,7 +356,7 @@ export function CorkboardView({ blocks, characterColors, onReorder, onCardClick,
                   <span style={{fontSize:8.5, fontWeight:700, letterSpacing:.5,
                     color:meta.time==="NOCHE"?C.purple:C.yellow,
                     background:`rgba(${hexToRgb(meta.time==="NOCHE"?C.purple:C.yellow)},.12)`,
-                    padding:"2px 6px", borderRadius:4}}>
+                    padding:"2px 6px", borderRadius:RADIUS.xs}}>
                     {meta.time}
                   </span>
                 )}
@@ -393,7 +393,7 @@ export function CorkboardView({ blocks, characterColors, onReorder, onCardClick,
                   <span key={name} style={{
                     fontSize:8.5, fontWeight:600, color:characterColors[name]||C.green,
                     background:`rgba(${hexToRgb(characterColors[name]||C.green)},.12)`,
-                    padding:"2px 6px", borderRadius:9, whiteSpace:"nowrap",
+                    padding:"2px 6px", borderRadius:RADIUS.sm, whiteSpace:"nowrap",
                     overflow:"hidden", textOverflow:"ellipsis", maxWidth:80,
                   }}>{name}</span>
                 ))}
@@ -425,7 +425,7 @@ export function CharactersPanel({ characters }) {
           desc="Los personajes aparecen automáticamente al escribir sus diálogos."/>
       )}
       {entries.sort((a,b)=>b[1].lines-a[1].lines).map(([name,info]) => (
-        <div key={name} style={{padding:"10px 12px", marginBottom:6, borderRadius:9,
+        <div key={name} style={{padding:"10px 12px", marginBottom:6, borderRadius:RADIUS.sm,
           background:C.bgCard, border:`1px solid ${C.border}`}}>
           <div style={{display:"flex", alignItems:"center", gap:8, marginBottom:7}}>
             <div style={{width:10, height:10, borderRadius:"50%", background:info.color,
@@ -434,8 +434,8 @@ export function CharactersPanel({ characters }) {
               fontFamily:"'Courier Prime',monospace", letterSpacing:.5, flex:1}}>{name}</span>
             <span style={{fontSize:11, color:C.textMuted}}>{info.lines} líneas</span>
           </div>
-          <div style={{height:3, borderRadius:2, background:C.border}}>
-            <div style={{height:"100%", borderRadius:2, background:info.color,
+          <div style={{height:3, borderRadius:RADIUS.xs, background:C.border}}>
+            <div style={{height:"100%", borderRadius:RADIUS.xs, background:info.color,
               width:`${Math.round(info.lines/maxLines*100)}%`, transition:"width .3s"}}/>
           </div>
         </div>
@@ -453,7 +453,7 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
         <>
           <p style={{fontSize:10, color:C.textMuted, textTransform:"uppercase",
             letterSpacing:1.5, fontWeight:700, marginBottom:8}}>Nota del bloque activo</p>
-          <div style={{padding:"12px", borderRadius:9, background:C.bgCard,
+          <div style={{padding:"12px", borderRadius:RADIUS.sm, background:C.bgCard,
             border:`1px solid ${C.borderBright}`, marginBottom:16}}>
             <p style={{fontSize:10, color:C.textMuted, marginBottom:6}}>
               <span style={{color:typeColor(block.type)}}>[{typeLabel(block.type)}]</span>{" "}
@@ -480,7 +480,7 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
             Todas las notas · {withNotes.length}
           </p>
           {withNotes.map(b => (
-            <div key={b.id} style={{padding:"10px 12px", marginBottom:5, borderRadius:8,
+            <div key={b.id} style={{padding:"10px 12px", marginBottom:5, borderRadius:RADIUS.sm,
               background:C.bgCard, border:`1px solid ${C.border}`,
               borderLeft:`3px solid ${C.yellow}`}}>
               <p style={{fontSize:10, color:C.yellow, marginBottom:4, fontFamily:"monospace"}}>
@@ -512,13 +512,13 @@ export function StatsPanel({ stats }) {
     <div>
       {items.map(([label,val]) => (
         <div key={label} style={{display:"flex", justifyContent:"space-between", alignItems:"center",
-          padding:"10px 12px", marginBottom:4, borderRadius:8,
+          padding:"10px 12px", marginBottom:4, borderRadius:RADIUS.sm,
           background:C.bgCard, border:`1px solid ${C.border}`}}>
           <span style={{fontSize:13, color:C.textSec}}>{label}</span>
           <span style={{fontSize:16, color:C.textPrimary, fontWeight:700}}>{val}</span>
         </div>
       ))}
-      <div style={{marginTop:12, padding:"14px 16px", borderRadius:10,
+      <div style={{marginTop:12, padding:"14px 16px", borderRadius:RADIUS.md,
         background:`rgba(${hexToRgb(C.accent)},.08)`, border:`1px solid rgba(${hexToRgb(C.accent)},.25)`}}>
         <p style={{fontSize:10, color:C.accent, marginBottom:4, fontWeight:700,
           textTransform:"uppercase", letterSpacing:.5}}>Duración estimada</p>
@@ -541,7 +541,7 @@ export function SearchPanel({ query, onQuery, results, onResultClick, isMobile }
       <input ref={inputRef} value={query} onChange={e=>onQuery(e.target.value)}
         placeholder="Buscar en el guion..."
         style={{width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
-          borderRadius:9, padding:"11px 14px", color:C.textPrimary, fontSize:14,
+          borderRadius:RADIUS.sm, padding:"11px 14px", color:C.textPrimary, fontSize:14,
           outline:"none", marginBottom:12, transition:"border-color .14s"}}
         onFocus={e=>e.target.style.borderColor=C.accent}
         onBlur={e=>e.target.style.borderColor=C.borderBright}/>
@@ -552,13 +552,13 @@ export function SearchPanel({ query, onQuery, results, onResultClick, isMobile }
       )}
       {results.map(r => (
         <div key={r.id} onClick={()=>onResultClick(r.index)}
-          style={{padding:"10px 12px", marginBottom:4, borderRadius:8,
+          style={{padding:"10px 12px", marginBottom:4, borderRadius:RADIUS.sm,
             background:C.bgCard, border:`1px solid ${C.border}`, cursor:"pointer", transition:"all .13s"}}
           onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border}}>
           <div style={{display:"flex", alignItems:"center", gap:6, marginBottom:4}}>
             <span style={{fontSize:9, fontWeight:700, color:typeColor(r.type),
-              background:`rgba(${hexToRgb(typeColor(r.type))},.1)`, padding:"1px 5px", borderRadius:3}}>
+              background:`rgba(${hexToRgb(typeColor(r.type))},.1)`, padding:"1px 5px", borderRadius:RADIUS.xs}}>
               {typeLabel(r.type)}
             </span>
           </div>

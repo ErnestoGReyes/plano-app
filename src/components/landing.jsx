@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { C } from "../design/tokens";
+import { C, RADIUS } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { supabase } from "../lib/supabase";
@@ -45,7 +45,7 @@ export function WelcomeScreen({ onNew, onImport, isDark }) {
 
       <div style={{display:"flex", flexDirection:"column", gap:10, width:"100%", maxWidth:280}}>
         <button onClick={onNew} style={{
-          padding:"14px 20px", borderRadius:12, border:"none",
+          padding:"14px 20px", borderRadius:RADIUS.md, border:"none",
           background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
           cursor:"pointer", fontFamily:"'Courier Prime',monospace",
           display:"flex", alignItems:"center", justifyContent:"center", gap:8,
@@ -57,7 +57,7 @@ export function WelcomeScreen({ onNew, onImport, isDark }) {
           <Icons.Plus style={{width:18,height:18}}/> Nuevo guion
         </button>
         <button onClick={onImport} style={{
-          padding:"13px 20px", borderRadius:12, border:`1.5px solid ${C.borderBright}`,
+          padding:"13px 20px", borderRadius:RADIUS.md, border:`1.5px solid ${C.borderBright}`,
           background:"none", color:C.textSec, fontSize:13, fontWeight:500,
           cursor:"pointer", fontFamily:"inherit",
           display:"flex", alignItems:"center", justifyContent:"center", gap:8,
@@ -81,13 +81,13 @@ export function LandingFeature({ icon, title, desc, isDark }) {
   return (
     <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
       style={{
-        padding:"22px 20px", borderRadius:14,
+        padding:"22px 20px", borderRadius:RADIUS.lg,
         background:C.bgCard, border:`1px solid ${hover?C.accent+"50":C.border}`,
         transition:"border-color .2s cubic-bezier(.16,1,.3,1), transform .2s cubic-bezier(.16,1,.3,1), box-shadow .2s ease",
         transform:hover?"translateY(-3px)":"none",
         boxShadow:hover?`0 12px 28px ${C.shadow}`:"none",
       }}>
-      <div style={{width:34, height:34, borderRadius:9, background:C.accentGlow,
+      <div style={{width:34, height:34, borderRadius:RADIUS.sm, background:C.accentGlow,
         display:"flex", alignItems:"center", justifyContent:"center",
         color:C.accent, marginBottom:14}}>
         {icon}
@@ -141,14 +141,14 @@ export function LandingPage({ isDark, onToggleTheme, onEnter }) {
         <div style={{display:"flex", alignItems:"center", gap:8}}>
           <button onClick={onToggleTheme} title={isDark?"Modo día":"Modo noche"}
             style={{background:"none", border:"none", color:C.textMuted, cursor:"pointer",
-              padding:8, borderRadius:8, display:"flex", alignItems:"center",
+              padding:8, borderRadius:RADIUS.sm, display:"flex", alignItems:"center",
               transition:"color .18s ease, background .18s ease"}}
             onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
             onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
             {isDark ? <Icons.Sun/> : <Icons.Moon/>}
           </button>
           <button onClick={onEnter} style={{
-            background:"none", border:`1px solid ${C.borderBright}`, borderRadius:9,
+            background:"none", border:`1px solid ${C.borderBright}`, borderRadius:RADIUS.sm,
             color:C.textSec, fontSize:12.5, fontWeight:600, padding:"8px 16px",
             cursor:"pointer", fontFamily:"inherit",
             transition:"border-color .18s ease, color .18s ease"}}
@@ -164,7 +164,7 @@ export function LandingPage({ isDark, onToggleTheme, onEnter }) {
         padding:"64px 24px 56px", maxWidth:680, margin:"0 auto"}}>
         <div style={{
           display:"inline-flex", alignItems:"center", gap:6,
-          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:20,
+          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:RADIUS.pill,
           padding:"5px 14px", fontSize:11, color:C.textMuted, marginBottom:24,
         }}>
           <div style={{width:5, height:5, borderRadius:"50%", background:C.accent}}/>
@@ -188,7 +188,7 @@ export function LandingPage({ isDark, onToggleTheme, onEnter }) {
 
         <div style={{display:"flex", gap:10, justifyContent:"center", flexWrap:"wrap"}}>
           <button onClick={onEnter} style={{
-            padding:"13px 28px", borderRadius:11, border:"none",
+            padding:"13px 28px", borderRadius:RADIUS.md, border:"none",
             background:C.accent, color:"#fff", fontSize:14, fontWeight:700,
             cursor:"pointer", fontFamily:"'Courier Prime',monospace", letterSpacing:.3,
             display:"flex", alignItems:"center", gap:8,
@@ -205,7 +205,7 @@ export function LandingPage({ isDark, onToggleTheme, onEnter }) {
       {/* Mockup de editor */}
       <div className="fade-in" style={{position:"relative", zIndex:2, maxWidth:680, margin:"0 auto 64px", padding:"0 24px"}}>
         <div style={{
-          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:12,
+          background:C.bgCard, border:`1px solid ${C.border}`, borderRadius:RADIUS.md,
           padding:"28px 36px 36px", boxShadow:`0 24px 60px ${C.shadow}`,
         }}>
           <div style={{fontFamily:"'Courier Prime',monospace", fontSize:12.5, lineHeight:1.75}}>
@@ -285,7 +285,7 @@ export function AuthScreen({ isDark, onToggleTheme }) {
 
   const inputStyle = {
     width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
-    borderRadius:10, padding:"13px 16px", color:C.textPrimary, fontSize:15,
+    borderRadius:RADIUS.md, padding:"13px 16px", color:C.textPrimary, fontSize:15,
     outline:"none", transition:"border-color .15s", fontFamily:"inherit",
     boxSizing:"border-box",
   };
@@ -318,7 +318,7 @@ export function AuthScreen({ isDark, onToggleTheme }) {
       {/* Theme toggle top-right */}
       <button onClick={onToggleTheme} title={isDark?"Modo día":"Modo noche"}
         style={{position:"fixed", top:16, right:16, background:"none", border:"none",
-          color:C.textMuted, cursor:"pointer", padding:8, borderRadius:8,
+          color:C.textMuted, cursor:"pointer", padding:8, borderRadius:RADIUS.sm,
           display:"flex", alignItems:"center", zIndex:2,
           transition:"color .18s ease, background .18s ease"}}
         onMouseEnter={e=>{e.currentTarget.style.color=C.accent;e.currentTarget.style.background=C.accentGlow}}
@@ -353,7 +353,7 @@ export function AuthScreen({ isDark, onToggleTheme }) {
       <div className="modal-in" style={{
         width:"100%", maxWidth:400, position:"relative", zIndex:2,
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:16, padding:"32px 28px",
+        borderRadius:RADIUS.lg, padding:"32px 28px",
         boxShadow:`0 24px 60px ${C.shadow}, 0 0 0 1px ${C.accent}08`,
       }}>
         <h1 style={{
@@ -390,18 +390,18 @@ export function AuthScreen({ isDark, onToggleTheme }) {
 
           {error && (
             <p style={{fontSize:12, color:C.red, margin:0, padding:"10px 14px",
-              background:`rgba(240,96,96,.08)`, borderRadius:8,
+              background:`rgba(240,96,96,.08)`, borderRadius:RADIUS.sm,
               border:`1px solid rgba(240,96,96,.2)`}}>{error}</p>
           )}
           {success && (
             <p style={{fontSize:12, color:C.green, margin:0, padding:"10px 14px",
-              background:`rgba(63,202,140,.08)`, borderRadius:8,
+              background:`rgba(63,202,140,.08)`, borderRadius:RADIUS.sm,
               border:`1px solid rgba(63,202,140,.2)`}}>{success}</p>
           )}
 
           <button onClick={handleSubmit} disabled={loading}
             style={{
-              width:"100%", padding:"13px", borderRadius:10, border:"none",
+              width:"100%", padding:"13px", borderRadius:RADIUS.md, border:"none",
               background:C.accent, color:"#fff", fontSize:15, fontWeight:600,
               cursor:loading?"wait":"pointer", transition:"opacity .15s",
               opacity:loading?.65:1, fontFamily:"inherit", marginTop:4,

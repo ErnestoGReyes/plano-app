@@ -31,7 +31,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
 
   const inputStyle = {
     width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
-    borderRadius:9, padding:"10px 14px", color:C.textPrimary, fontSize:13,
+    borderRadius:RADIUS.sm, padding:"10px 14px", color:C.textPrimary, fontSize:13,
     outline:"none", fontFamily:"inherit", boxSizing:"border-box",
   };
 
@@ -43,7 +43,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:16, width:"100%", maxWidth:420,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`, padding:"24px",
       }}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20}}>
@@ -67,7 +67,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
           onClick={()=>fileRef.current?.click()}
           style={{
             border:`2px dashed ${dragging?C.accent:C.borderBright}`,
-            borderRadius:12, padding:"32px 20px", textAlign:"center",
+            borderRadius:RADIUS.md, padding:"32px 20px", textAlign:"center",
             background:dragging?C.accentGlow:"transparent",
             cursor:"pointer", transition:"all .15s", marginBottom:16,
           }}>
@@ -94,7 +94,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
                 onBlur={e=>e.target.style.borderColor=C.borderBright}/>
             </div>
             <button onClick={()=>onImport(parsed, fileName||"Guion importado")} style={{
-              width:"100%", padding:"12px", borderRadius:10, border:"none",
+              width:"100%", padding:"12px", borderRadius:RADIUS.md, border:"none",
               background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
               cursor:"pointer", fontFamily:"inherit",
               display:"flex", alignItems:"center", justifyContent:"center", gap:8,
@@ -145,7 +145,7 @@ export function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:16, width:"100%", maxWidth:400,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:400,
         boxShadow:`0 24px 60px ${C.shadow}`,
         maxHeight:"80dvh", display:"flex", flexDirection:"column",
       }}>
@@ -179,7 +179,7 @@ export function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
             return (
               <div key={v.id} style={{
                 display:"flex", alignItems:"center", gap:10, padding:"11px 12px",
-                borderRadius:10, marginBottom:6, background:C.bgCard,
+                borderRadius:RADIUS.md, marginBottom:6, background:C.bgCard,
                 border:`1px solid ${C.border}`,
               }}>
                 <Icons.History style={{width:14,height:14,flexShrink:0,color:C.textMuted}}/>
@@ -271,7 +271,7 @@ export function OnboardingModal({ onClose, isDark }) {
       }}>
         {/* Progress bar */}
         <div style={{height:3, background:C.border}}>
-          <div style={{height:"100%", background:C.accent, borderRadius:2,
+          <div style={{height:"100%", background:C.accent, borderRadius:RADIUS.xs,
             width:`${((step+1)/steps.length)*100}%`, transition:"width .3s ease"}}/>
         </div>
 
@@ -293,7 +293,7 @@ export function OnboardingModal({ onClose, isDark }) {
           {/* Tip */}
           {s.tip && (
             <div style={{background:C.bgCard, border:`1px solid ${C.border}`,
-              borderRadius:10, padding:"10px 14px", marginBottom:20,
+              borderRadius:RADIUS.md, padding:"10px 14px", marginBottom:20,
               display:"flex", gap:8, alignItems:"flex-start"}}>
               <span style={{fontSize:13, flexShrink:0}}>💡</span>
               <p style={{fontSize:12, color:C.textMuted, margin:0, lineHeight:1.6}}>{s.tip}</p>
@@ -304,7 +304,7 @@ export function OnboardingModal({ onClose, isDark }) {
           <div style={{display:"flex", justifyContent:"center", gap:6, marginBottom:24}}>
             {steps.map((_,i) => (
               <div key={i} onClick={()=>setStep(i)} style={{
-                width:i===step?20:6, height:6, borderRadius:3,
+                width:i===step?20:6, height:6, borderRadius:RADIUS.xs,
                 background:i===step?C.accent:C.border,
                 cursor:"pointer", transition:"all .25s",
               }}/>
@@ -320,7 +320,7 @@ export function OnboardingModal({ onClose, isDark }) {
               </Btn>
             )}
             <button onClick={isLast ? onClose : ()=>setStep(v=>v+1)} style={{
-              flex:2, padding:"11px", borderRadius:10, border:"none",
+              flex:2, padding:"11px", borderRadius:RADIUS.md, border:"none",
               background:isLast?C.green:C.accent, color:"#fff",
               fontSize:14, fontWeight:600, cursor:"pointer",
               fontFamily:"inherit", transition:"opacity .15s",
@@ -354,7 +354,7 @@ export function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClos
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:16, width:"100%", maxWidth:420,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`,
         maxHeight:"80dvh", display:"flex", flexDirection:"column",
       }}>
@@ -369,7 +369,7 @@ export function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClos
             </div>
           </div>
           <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
-            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex"}}>
+            cursor:"pointer", padding:"4px 6px", borderRadius:RADIUS.sm, display:"flex"}}>
             <Icons.Close/>
           </button>
         </div>
@@ -387,7 +387,7 @@ export function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClos
             return (
               <div key={p.id} style={{
                 display:"flex", alignItems:"center", gap:10, padding:"11px 12px",
-                borderRadius:10, marginBottom:6, background:C.bgCard,
+                borderRadius:RADIUS.md, marginBottom:6, background:C.bgCard,
                 border:`1px solid ${C.border}`,
               }}>
                 <Icons.Projects style={{width:16,height:16,flexShrink:0,color:C.textMuted}}/>
@@ -498,7 +498,7 @@ export function HelpModal({ onClose, isDark }) {
             </div>
           </div>
           <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
-            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex", marginTop:2}}>
+            cursor:"pointer", padding:"4px 6px", borderRadius:RADIUS.sm, display:"flex", marginTop:2}}>
             <Icons.Close/>
           </button>
         </div>
@@ -508,7 +508,7 @@ export function HelpModal({ onClose, isDark }) {
           scrollbarWidth:"none", WebkitOverflowScrolling:"touch"}}>
           {GUIDE_ELEMENTS.map((g, i) => (
             <button key={g.type} onClick={()=>setActive(i)} style={{
-              padding:"6px 12px", borderRadius:20, border:"none", cursor:"pointer",
+              padding:"6px 12px", borderRadius:RADIUS.pill, border:"none", cursor:"pointer",
               fontSize:11, fontWeight:600, whiteSpace:"nowrap", transition:"all .15s",
               background: active===i ? g.color : C.bgCard,
               color: active===i ? (isDark?"#0A0909":"#fff") : C.textMuted,
@@ -524,7 +524,7 @@ export function HelpModal({ onClose, isDark }) {
           {/* Example box */}
           <div style={{
             background:C.bgEditor, border:`1px solid ${C.border}`,
-            borderRadius:12, padding:"20px 24px", marginBottom:20,
+            borderRadius:RADIUS.md, padding:"20px 24px", marginBottom:20,
             fontFamily:"'Courier Prime',monospace", fontSize:13,
           }}>
             <div style={{fontSize:10, fontWeight:600, color:C.textMuted,
@@ -538,7 +538,7 @@ export function HelpModal({ onClose, isDark }) {
             <div style={{
               background:`rgba(${hexToRgb(el.color)},.12)`,
               border:`1.5px solid rgba(${hexToRgb(el.color)},.35)`,
-              borderRadius:7, padding:"8px 12px", marginBottom:4,
+              borderRadius:RADIUS.sm, padding:"8px 12px", marginBottom:4,
               color:el.color, fontSize:12, fontWeight:700,
               textAlign: el.type===T.CHARACTER||el.type===T.PAREN||el.type===T.DIALOGUE ? "center" : 
                          el.type===T.TRANSITION ? "right" : "left",
@@ -564,7 +564,7 @@ export function HelpModal({ onClose, isDark }) {
           <div style={{
             background:`rgba(${hexToRgb(C.yellow)},.08)`,
             border:`1px solid rgba(${hexToRgb(C.yellow)},.2)`,
-            borderRadius:9, padding:"11px 14px",
+            borderRadius:RADIUS.sm, padding:"11px 14px",
             display:"flex", gap:10, alignItems:"flex-start",
           }}>
             <span style={{fontSize:14, flexShrink:0}}>💡</span>
@@ -609,7 +609,7 @@ export function HelpModal({ onClose, isDark }) {
                 <div key={key} style={{display:"flex", alignItems:"center", gap:8, fontSize:11.5}}>
                   <kbd style={{
                     background:C.bgCard, border:`1px solid ${C.borderBright}`,
-                    borderRadius:5, padding:"2px 7px", fontSize:10.5,
+                    borderRadius:RADIUS.xs, padding:"2px 7px", fontSize:10.5,
                     fontFamily:"'Courier Prime',monospace", color:C.textSec, whiteSpace:"nowrap",
                   }}>{key}</kbd>
                   <span style={{color:C.textMuted}}>{label}</span>
@@ -631,14 +631,14 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
 
   const inputStyle = {
     width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
-    borderRadius:9, padding:"10px 14px", color:C.textPrimary, fontSize:13,
+    borderRadius:RADIUS.sm, padding:"10px 14px", color:C.textPrimary, fontSize:13,
     outline:"none", fontFamily:"inherit", boxSizing:"border-box",
     transition:"border-color .15s",
   };
 
   const radioStyle = (active) => ({
     display:"flex", alignItems:"flex-start", gap:12, padding:"12px 14px",
-    borderRadius:10, border:`1.5px solid ${active ? C.accent : C.borderBright}`,
+    borderRadius:RADIUS.md, border:`1.5px solid ${active ? C.accent : C.borderBright}`,
     background: active ? C.accentGlow : "none",
     cursor:"pointer", transition:"all .15s",
   });
@@ -659,7 +659,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:16, padding:"28px 24px", width:"100%", maxWidth:420,
+        borderRadius:RADIUS.lg, padding:"28px 24px", width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`,
       }}>
         {/* Header */}
@@ -671,7 +671,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
             <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>Formato profesional de guion</div>
           </div>
           <button onClick={onClose} style={{background:"none", border:"none", color:C.textMuted,
-            cursor:"pointer", padding:"4px 6px", borderRadius:6, display:"flex"}}>
+            cursor:"pointer", padding:"4px 6px", borderRadius:RADIUS.sm, display:"flex"}}>
             <Icons.Close/>
           </button>
         </div>
@@ -685,7 +685,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
             height:format==="hollywood"?119:124,
             background:isDark?"#1A1812":"#FAF8F2",
             border:`1px solid ${C.borderBright}`,
-            borderRadius:3,
+            borderRadius:RADIUS.xs,
             boxShadow:`0 8px 24px ${C.shadow}, 0 1px 0 ${C.borderBright}`,
             display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
             padding:"10px 8px", textAlign:"center", transition:"all .25s cubic-bezier(.16,1,.3,1)",
@@ -769,7 +769,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
             textTransform:"uppercase", marginBottom:10}}>Opciones</div>
           <label style={{display:"flex", alignItems:"center", gap:10, cursor:"pointer"}}>
             <div onClick={()=>setSceneNumbers(v=>!v)} style={{
-              width:18, height:18, borderRadius:5, border:`2px solid ${sceneNumbers?C.accent:C.borderBright}`,
+              width:18, height:18, borderRadius:RADIUS.xs, border:`2px solid ${sceneNumbers?C.accent:C.borderBright}`,
               background:sceneNumbers?C.accent:"none", flexShrink:0,
               display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s",
             }}>
@@ -786,7 +786,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
 
         {/* Botón */}
         <button onClick={generate} disabled={generating} style={{
-          width:"100%", padding:"13px", borderRadius:10, border:"none",
+          width:"100%", padding:"13px", borderRadius:RADIUS.md, border:"none",
           background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
           cursor:generating?"wait":"pointer", opacity:generating?.7:1,
           fontFamily:"'Courier Prime',monospace", letterSpacing:.5,

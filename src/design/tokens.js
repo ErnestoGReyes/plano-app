@@ -74,11 +74,11 @@ export const LIGHT = {
   bgSidebar:    "#EBE4D8",
   bgEditor:     "#F8F4EC",   // página en blanco cálida
   bgPanel:      "#EDE6DA",
-  bgCard:       "#F8F4EC",
-  bgCardHover:  "#F2EDE4",
-  bgActive:     "#EDE0C8",
-  border:       "#D8CEB8",
-  borderBright: "#C4B898",
+  bgCard:       "#FAF8F4",   // antes #F8F4EC — casi blanca, "hoja elevada"
+  bgCardHover:  "#F5F1E8",
+  bgActive:     "#DCD3BC",   // antes #EDE0C8 (contraste 1.12 → 1.28)
+  border:       "#C8B893",   // antes #D8CEB8 (contraste 1.34 → 1.68)
+  borderBright: "#947F4C",   // antes #C4B898 (contraste 1.69 → 3.34)
   accent:       "#8B6820",   // dorado oscuro sobre claro
   accentGlow:   "rgba(139,104,32,0.10)",
   accentWarm:   "#A07828",

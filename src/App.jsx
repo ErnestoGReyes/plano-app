@@ -117,8 +117,12 @@ export function AppInner() {
   // ── Cargando sesión ────────────────────────────────────────────────────────
   if (session === undefined) {
     return (
-      <div style={{minHeight:"100dvh", display:"flex", alignItems:"center",
-        justifyContent:"center", background:C.bgApp}}>
+      <div style={{minHeight:"100dvh", display:"flex", flexDirection:"column", gap:16,
+        alignItems:"center", justifyContent:"center", background:C.bgApp}}>
+        <svg className="spinner" width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke={C.border} strokeWidth="2.5"/>
+          <path d="M21 12a9 9 0 0 0-9-9" stroke={C.accent} strokeWidth="2.5" strokeLinecap="round"/>
+        </svg>
         <div style={{color:C.textMuted, fontSize:13, fontFamily:"'Courier Prime',monospace",
           letterSpacing:2}}>PLANO</div>
       </div>
