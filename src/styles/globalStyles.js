@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { DARK, LIGHT, C } from "../design/tokens";
 
-export function makeGlobalCss(C, isDark) { return `
+export function makeGlobalCss(C) { return `
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   html,body,#root{height:100%;background:${C.bgApp};color:${C.textPrimary};font-family:'Inter',system-ui,sans-serif}
@@ -17,34 +17,10 @@ export function makeGlobalCss(C, isDark) { return `
       radial-gradient(ellipse 1100px 700px at 15% -8%, ${C.accent}14, transparent 60%),
       radial-gradient(ellipse 900px 650px at 100% 105%, ${C.accentWarm}0d, transparent 62%);
   }
-  /* z-index alto (no negativo): en negativo queda TAPADO por los fondos
-     opacos de sidebar/editor/panel, que se pintan por encima de él dentro
-     del mismo stacking context. Con mix-blend-mode + pointer-events:none
-     se ve por arriba de todo sin interferir con clicks ni tapar contenido.
-
-     Textura "papel + máquina de escribir": grano fino de fondo (feTurbulence)
-     + dos capas de puntitos a distinta escala/offset simulando la tinta
-     desigual de los tipos — no un ruido parejo, sino manchitas irregulares.
-     "screen" en modo noche: agrega motas de LUZ sobre el negro — "overlay"
-     casi no hace nada contra un fondo tan oscuro (#0A0909), es matemáticamente
-     débil en los extremos (negro o blanco puro). "multiply" en modo día
-     agrega motas de TINTA sobre el papel claro. Los puntitos también cambian
-     de color según el tema — blancos de noche, negros de día — si no, en modo
-     noche quedan puntitos negros invisibles sobre fondo negro. */
-  #root::after{
-    content:"";
-    position:fixed; inset:-15%; z-index:9999; pointer-events:none;
-    width:130%; height:130%;
-    opacity:${isDark ? .16 : .17};
-    mix-blend-mode:${isDark ? "screen" : "multiply"};
-    background-image:
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"),
-      radial-gradient(circle, ${isDark ? "rgba(255,255,255,.55)" : "rgba(0,0,0,.5)"} .6px, transparent .7px),
-      radial-gradient(circle, ${isDark ? "rgba(255,255,255,.35)" : "rgba(0,0,0,.32)"} .4px, transparent .5px);
-    background-size: 160px 160px, 5px 5px, 8px 8px;
-    background-position: 0 0, 0 0, 2px 3px;
-    animation:grain 9s steps(8) infinite;
-  }
+  /* El grano ya NO vive acá como overlay de pantalla completa (eso traía
+     bugs de mix-blend-mode contra fondos casi negros/blancos y no se podía
+     acotar a zonas puntuales). Ahora se aplica como background-image directo
+     en cada superficie de chrome vía grainStyle() — ver más abajo. */
 
   /* ── Scrollbars noir ── */
   ::-webkit-scrollbar{width:7px;height:7px}
@@ -118,7 +94,7 @@ export function InjectStyles({ theme }) {
   useEffect(() => {
     const el = document.createElement("style");
     el.id = "plano-global-styles";
-    el.textContent = makeGlobalCss(C, theme !== "light");
+    el.textContent = makeGlobalCss(C);
     document.head.appendChild(el);
 
     // Título de la pestaña
@@ -146,7 +122,26 @@ export function InjectStyles({ theme }) {
   }, []);
   useEffect(() => {
     const el = document.getElementById("plano-global-styles");
-    if (el) el.textContent = makeGlobalCss(C, theme !== "light");
+    if (el) el.textContent = makeGlobalCss(C);
   }, [theme]);
   return null;
+}
+
+// ── Textura de chrome: grano fino tipo película, sutil ──────────────────
+// Se usa como background-image directo en superficies puntuales (sidebar,
+// panel de escenas, toolbar) — nunca en la hoja del editor. El ruido queda
+// "horneado" dentro del propio SVG (feColorMatrix fija el alpha), así que
+// no depende de mix-blend-mode ni de qué tan oscuro/claro sea el fondo:
+// blanco muy transparente en modo noche, negro muy transparente en modo día.
+export function grainStyle(isDark) {
+  const a = isDark ? 0.045 : 0.06; // sutil: bien por debajo de lo que probamos antes
+  const rgb = isDark ? 1 : 0;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>` +
+    `<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='3' stitchTiles='stitch' result='noise'/>` +
+    `<feColorMatrix in='noise' type='matrix' values='0 0 0 0 ${rgb} 0 0 0 0 ${rgb} 0 0 0 0 ${rgb} 0 0 0 ${a} 0'/></filter>` +
+    `<rect width='100%' height='100%' filter='url(%23n)'/></svg>`;
+  return {
+    backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(svg)}")`,
+    backgroundSize: "160px 160px",
+  };
 }

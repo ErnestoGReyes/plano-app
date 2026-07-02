@@ -1,8 +1,9 @@
 import { useState, memo } from "react";
-import { C, T, RADIUS, FONT_DISPLAY, hexToRgb } from "../design/tokens";
+import { C, DARK, T, RADIUS, FONT_DISPLAY, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
+import { grainStyle } from "../styles/globalStyles";
 
 export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImport, onHistory,
   projectName, saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
@@ -20,7 +21,8 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
 
   return (
     <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
-      padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46}}>
+      padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46,
+      ...grainStyle(C.bgApp===DARK.bgApp)}}>
 
       {/* Nombre de proyecto — antes solo se veía en mobile, acá le da identidad al toolbar de escritorio */}
       {projectName && (

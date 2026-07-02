@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { C, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { C, DARK, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor } from "../utils/screenplay";
+import { grainStyle } from "../styles/globalStyles";
 
 export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
   onRenameProject, onReorderProjects, onOpenTrash,
@@ -20,6 +21,7 @@ export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewPr
     <div style={{
       width:248, background:C.bgPanel, borderLeft:`1px solid ${C.border}`,
       display:"flex", flexDirection:"column", height:"100dvh", flexShrink:0,
+      ...grainStyle(C.bgApp===DARK.bgApp),
     }}>
       <div style={{padding:"12px 14px 8px", borderBottom:`1px solid ${C.border}`, flexShrink:0}}>
         <span style={{fontSize:10, fontWeight:700, color:C.textMuted,
