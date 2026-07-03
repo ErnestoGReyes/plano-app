@@ -130,7 +130,7 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
   };
 
   const hasNote = !!block.note?.trim();
-  const col = typeColor(block.type);
+  const col = typeColor(block.type, C);
 
   const handleChange = e => {
     onUpdate(index, e.target.value);

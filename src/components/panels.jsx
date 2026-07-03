@@ -492,7 +492,7 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
           <div style={{padding:"12px", borderRadius:RADIUS.sm, background:C.bgCard,
             border:`1px solid ${C.borderBright}`, marginBottom:16}}>
             <p style={{fontSize:10, color:C.textMuted, marginBottom:6}}>
-              <span style={{color:typeColor(block.type)}}>[{typeLabel(block.type)}]</span>{" "}
+              <span style={{color:typeColor(block.type, C)}}>[{typeLabel(block.type)}]</span>{" "}
               {block.text?.slice(0,40)||(
                 <span style={{fontStyle:"italic"}}>(vacío)</span>
               )}
@@ -595,8 +595,8 @@ export function SearchPanel({ query, onQuery, results, onResultClick, isMobile }
           onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent}}
           onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border}}>
           <div style={{display:"flex", alignItems:"center", gap:6, marginBottom:4}}>
-            <span style={{fontSize:9, fontWeight:700, color:typeColor(r.type),
-              background:`rgba(${hexToRgb(typeColor(r.type))},.1)`, padding:"1px 5px", borderRadius:RADIUS.xs}}>
+            <span style={{fontSize:9, fontWeight:700, color:typeColor(r.type, C),
+              background:`rgba(${hexToRgb(typeColor(r.type, C))},.1)`, padding:"1px 5px", borderRadius:RADIUS.xs}}>
               {typeLabel(r.type)}
             </span>
           </div>

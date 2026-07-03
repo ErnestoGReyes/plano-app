@@ -1,4 +1,4 @@
-import { T, C, CHARACTER_PALETTE } from "../design/tokens";
+import { T, CHARACTER_PALETTE } from "../design/tokens";
 
 export function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -39,7 +39,7 @@ export function typeTooltip(type) {
   }[type] || "";
 }
 
-export function typeColor(type) {
+export function typeColor(type, C) {
   return { [T.SCENE]:C.accentWarm,[T.ACTION]:C.textSec,[T.CHARACTER]:C.green,
            [T.PAREN]:"#C0A060",[T.DIALOGUE]:C.accent,[T.TRANSITION]:C.purple }[type] || C.textSec;
 }
