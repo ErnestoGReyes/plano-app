@@ -3,7 +3,6 @@ import { T, RADIUS, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
-import { grainStyle } from "../styles/globalStyles";
 
 export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
   const C = useTheme();
@@ -23,7 +22,6 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
       display:"flex", flexDirection:"column", alignItems:"center",
       padding:"12px 6px", gap:2, flexShrink:0, height:"100dvh",
       transition:"background .25s,border-color .25s",
-      ...grainStyle(isDark),
     }}>
       {/* Logo — tira de película + cursor */}
       <div className="flicker" style={{marginBottom:8, flexShrink:0, cursor:"default"}} title="PLANO Screenwriting">

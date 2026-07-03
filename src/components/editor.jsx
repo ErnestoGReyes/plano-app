@@ -1,10 +1,9 @@
 import { useState, memo } from "react";
-import { DARK, T, RADIUS, hexToRgb } from "../design/tokens";
+import { T, RADIUS, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
-import { grainStyle } from "../styles/globalStyles";
 
 export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImport, onHistory,
   projectName, saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
@@ -23,8 +22,7 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
 
   return (
     <div style={{background:C.bgPanel, borderBottom:`1px solid ${C.border}`,
-      padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46,
-      ...grainStyle(C.bgApp===DARK.bgApp)}}>
+      padding:"0 12px", display:"flex", alignItems:"center", gap:4, flexShrink:0, height:46}}>
 
       {/* Nombre de proyecto — Inter, no Cormorant: FONT_DISPLAY es para headlines
           editoriales (landing, estados vacíos), no para chrome funcional como este */}
