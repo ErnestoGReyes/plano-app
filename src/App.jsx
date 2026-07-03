@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from "react";
-import { C, T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb } from "./design/tokens";
+import { T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb } from "./design/tokens";
+import { useTheme, ThemeProvider } from "./contexts/ThemeContext";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
 import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups } from "./utils/screenplay";
@@ -106,8 +107,11 @@ export function AppInner() {
   const [isDark, setIsDark] = useState(() => {
     try { return localStorage.getItem("plano-theme") !== "light"; } catch { return true; }
   });
+  // C ya no se muta acá: se deriva directamente de isDark para lo que AppInner
+  // necesita antes de que exista el ThemeProvider (ver más abajo), y el resto
+  // del árbol lo consume vía useTheme() dentro del Provider.
+  const C = isDark ? DARK : LIGHT;
   useEffect(() => {
-    Object.assign(C, isDark ? DARK : LIGHT);
     try { localStorage.setItem("plano-theme", isDark ? "dark" : "light"); } catch {}
   }, [isDark]);
   const toggleTheme = useCallback(() => setIsDark(v => !v), []);
@@ -136,26 +140,30 @@ export function AppInner() {
   if (!session) {
     if (showLanding) {
       return (
-        <>
-          <InjectStyles theme={isDark?"dark":"light"}/>
+        <ThemeProvider isDark={isDark}>
+          <InjectStyles/>
           <LandingPage isDark={isDark} onToggleTheme={toggleTheme}
             onEnter={()=>{
               try { sessionStorage.setItem("plano-skip-landing","1"); } catch {}
               setShowLanding(false);
             }}/>
-        </>
+        </ThemeProvider>
       );
     }
     return (
-      <>
-        <InjectStyles theme={isDark?"dark":"light"}/>
+      <ThemeProvider isDark={isDark}>
+        <InjectStyles/>
         <AuthScreen isDark={isDark} onToggleTheme={toggleTheme}/>
-      </>
+      </ThemeProvider>
     );
   }
 
   // ── Con sesión → app completa ──────────────────────────────────────────────
-  return <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}/>;
+  return (
+    <ThemeProvider isDark={isDark}>
+      <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}/>
+    </ThemeProvider>
+  );
 }
 
 export default function App() {
@@ -167,6 +175,7 @@ export default function App() {
 }
 
 export function PlanoApp({ session, isDark, toggleTheme }) {
+  const C = useTheme();
   // ── Proyectos ──────────────────────────────────────────────────────────────
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -806,13 +815,9 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
     searchQuery, onSearchQuery: setSearchQuery, searchResults,
   };
 
-  // ── Actualizar C sincrónicamente antes del render ──────────────────────────
-  // Esto evita el glitch donde componentes internos leen valores viejos de C
-  Object.assign(C, isDark ? DARK : LIGHT);
-
   return (
     <>
-      <InjectStyles theme={isDark?"dark":"light"}/>
+      <InjectStyles/>
 
       {/* Onboarding */}
       {showOnboarding && (

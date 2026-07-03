@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { DARK, LIGHT, C } from "../design/tokens";
+import { DARK, LIGHT } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 
 export function makeGlobalCss(C) { return `
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Cormorant+Garamond:wght@500;600;700&display=swap');
@@ -90,7 +91,8 @@ export function makeGlobalCss(C) { return `
   button, input, textarea, a { transition: background-color .18s cubic-bezier(.16,1,.3,1), border-color .18s cubic-bezier(.16,1,.3,1), color .18s cubic-bezier(.16,1,.3,1), opacity .18s ease, box-shadow .2s ease, transform .12s ease; }
 `; }
 
-export function InjectStyles({ theme }) {
+export function InjectStyles() {
+  const C = useTheme();
   useEffect(() => {
     const el = document.createElement("style");
     el.id = "plano-global-styles";
@@ -123,7 +125,7 @@ export function InjectStyles({ theme }) {
   useEffect(() => {
     const el = document.getElementById("plano-global-styles");
     if (el) el.textContent = makeGlobalCss(C);
-  }, [theme]);
+  }, [C]);
   return null;
 }
 

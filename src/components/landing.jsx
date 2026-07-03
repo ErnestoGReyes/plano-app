@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { C, RADIUS } from "../design/tokens";
+import { RADIUS } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { supabase } from "../lib/supabase";
 
 export function WelcomeScreen({ onNew, onImport, isDark }) {
+  const C = useTheme();
   return (
     <div style={{
       flex:1, display:"flex", flexDirection:"column",
@@ -77,6 +79,7 @@ export function WelcomeScreen({ onNew, onImport, isDark }) {
 }
 
 export function LandingFeature({ icon, title, desc, isDark }) {
+  const C = useTheme();
   const [hover, setHover] = useState(false);
   return (
     <div onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
@@ -100,6 +103,7 @@ export function LandingFeature({ icon, title, desc, isDark }) {
 }
 
 export function LandingPage({ isDark, onToggleTheme, onEnter }) {
+  const C = useTheme();
   return (
     <div style={{minHeight:"100dvh", background:C.bgApp, position:"relative", overflow:"hidden"}}>
 
@@ -255,6 +259,7 @@ export function LandingPage({ isDark, onToggleTheme, onEnter }) {
 }
 
 export function AuthScreen({ isDark, onToggleTheme }) {
+  const C = useTheme();
   const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

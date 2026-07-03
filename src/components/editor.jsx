@@ -1,5 +1,6 @@
 import { useState, memo } from "react";
-import { C, DARK, T, RADIUS, hexToRgb } from "../design/tokens";
+import { DARK, T, RADIUS, hexToRgb } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
@@ -7,6 +8,7 @@ import { grainStyle } from "../styles/globalStyles";
 
 export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImport, onHistory,
   projectName, saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
+  const C = useTheme();
   const types = [
     {type:T.SCENE,      label:"Escena",    short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     label:"Acción",    short:"ACC", color:C.textSec},
@@ -96,6 +98,7 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
 function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, onFocus,
   onKeyDown, inputRef, charSuggestions, onAcceptSuggestion, isMobile,
   onAddBlockAfter, onDeleteBlock }) {
+  const C = useTheme();
   const color = characterColors[block.text?.trim()?.toUpperCase()] || C.green;
   const [showSug, setShowSug] = useState(false);
   const [showActions, setShowActions] = useState(false);

@@ -94,10 +94,12 @@ export const LIGHT = {
   shadow:       "rgba(60,45,20,0.18)",  // tinte cálido, no negro puro
 };
 
-// C es un objeto mutable: PlanoApp hace Object.assign(C, isDark ? DARK : LIGHT)
-// antes de cada render para que todos los componentes lean el tema activo
-// sin tener que pasarlo por props en cada nivel.
-export let C = { ...DARK };
+// El tema ya no vive en un objeto mutable acá. Los componentes leen el tema
+// activo (DARK o LIGHT) a través de useTheme(), definido en
+// ../contexts/ThemeContext.jsx, que envuelve la app con un <ThemeProvider>.
+// Esto garantiza que TODO componente que lo consuma se vuelva a renderizar
+// en el instante en que cambia el tema — sin depender de mutar un objeto
+// compartido y esperar que algo más dispare un re-render.
 
 export function hexToRgb(hex) {
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);

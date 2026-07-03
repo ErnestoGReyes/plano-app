@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { C, T, RADIUS, hexToRgb } from "../design/tokens";
+import { T, RADIUS, hexToRgb } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { grainStyle } from "../styles/globalStyles";
 
 export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
+  const C = useTheme();
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"corkboard", Icon:Icons.Board,      label:"Tablero"},
@@ -129,6 +131,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
 }
 
 export function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onHelp }) {
+  const C = useTheme();
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
     {id:"corkboard", Icon:Icons.Board,      label:"Tablero"},
@@ -166,6 +169,7 @@ export function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onH
 export function MobileEditorHeader({ projectName, words, pages, scenes, saving,
   activeType, onTypeChange, canUndo, canRedo, onUndo, onRedo,
   onExport, onExportFountain, focusMode, onFocusMode }) {
+  const C = useTheme();
   const types = [
     {type:T.SCENE,      short:"ESC", color:C.accentWarm},
     {type:T.ACTION,     short:"ACC", color:C.textSec},

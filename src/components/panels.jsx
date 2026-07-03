@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
-import { C, DARK, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { DARK, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
 import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor } from "../utils/screenplay";
@@ -9,6 +10,7 @@ export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewPr
   onRenameProject, onReorderProjects, onOpenTrash,
   scenes, characters, activeBlock, blocks, onNoteChange, stats,
   onSceneClick, searchQuery, onSearchQuery, searchResults, isMobile }) {
+  const C = useTheme();
 
   const panelTitle = {
     projects:"Guiones", scenes:"Escenas", characters:"Personajes",
@@ -45,6 +47,7 @@ export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewPr
 export function MobilePanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
   onRenameProject, scenes, characters, characterColors, activeBlock, blocks, onNoteChange, stats,
   onSceneClick, onReorderScenes, isDark, searchQuery, onSearchQuery, searchResults, onBack }) {
+  const C = useTheme();
 
   const panelTitle = {
     projects:"Guiones", scenes:"Escenas", corkboard:"Tablero", characters:"Personajes",
@@ -125,6 +128,7 @@ export function PanelContent({ tab, projects, selectedId, onSelectProject, onNew
 }
 
 export function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete, onRename, onReorder, onOpenTrash }) {
+  const C = useTheme();
   const [search, setSearch] = useState("");
   const [dragOver, setDragOver] = useState(null);
   const dragSrc = useRef(null);
@@ -182,6 +186,7 @@ export function ProjectsPanel({ projects, selectedId, onSelect, onNew, onDelete,
 }
 
 export function ProjectItem({ project, isActive, onSelect, onDelete, onRename, isDragOver, onDragStart, onDragOver, onDrop, onDragEnd }) {
+  const C = useTheme();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
   const [hover, setHover] = useState(false);
@@ -223,6 +228,7 @@ export function ProjectItem({ project, isActive, onSelect, onDelete, onRename, i
 }
 
 export function EmptyState({ icon, title, desc }) {
+  const C = useTheme();
   return (
     <div className="fade-in" style={{textAlign:"center", padding:"40px 16px 20px"}}>
       <div className="empty-float" style={{
@@ -240,6 +246,7 @@ export function EmptyState({ icon, title, desc }) {
 }
 
 export function ScenesPanel({ scenes, onSceneClick, activeBlock }) {
+  const C = useTheme();
   // La escena "actual" es la última cuyo encabezado quedó en o antes del
   // cursor — no solo cuando el cursor está literalmente sobre esa línea,
   // sino en cualquier bloque (acción, diálogo, etc.) dentro de esa escena.
@@ -296,6 +303,7 @@ export function ScenesPanel({ scenes, onSceneClick, activeBlock }) {
 }
 
 export function CorkboardView({ blocks, characterColors, onReorder, onCardClick, onNoteChange, isMobile, isDark }) {
+  const C = useTheme();
   const { preamble, groups } = useMemo(() => buildSceneGroups(blocks), [blocks]);
   const [dragOverId, setDragOverId] = useState(null);
   const dragSrc = useRef(null);
@@ -439,6 +447,7 @@ export function CorkboardView({ blocks, characterColors, onReorder, onCardClick,
 }
 
 export function CharactersPanel({ characters }) {
+  const C = useTheme();
   const entries = Object.entries(characters);
   const maxLines = Math.max(1, ...entries.map(([,i])=>i.lines));
   return (
@@ -471,6 +480,7 @@ export function CharactersPanel({ characters }) {
 }
 
 export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
+  const C = useTheme();
   const block = blocks[activeBlock];
   const withNotes = blocks.map((b,i)=>({...b,index:i})).filter(b=>b.note?.trim());
   return (
@@ -526,6 +536,7 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
 }
 
 export function StatsPanel({ stats }) {
+  const C = useTheme();
   const items = [
     ["Palabras", stats.words],
     ["Páginas aprox.", stats.pages],
@@ -558,6 +569,7 @@ export function StatsPanel({ stats }) {
 }
 
 export function SearchPanel({ query, onQuery, results, onResultClick, isMobile }) {
+  const C = useTheme();
   const inputRef = useRef(null);
   useEffect(() => {
     if (isMobile) setTimeout(() => inputRef.current?.focus(), 200);

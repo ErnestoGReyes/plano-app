@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { C, T, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { T, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn, Modal } from "./common";
 import { uid } from "../utils/screenplay";
@@ -8,6 +9,7 @@ import { exportToPDFPro } from "../utils/pdfExport";
 import { supabase } from "../lib/supabase";
 
 export function ImportFountainModal({ onImport, onClose, isDark }) {
+  const C = useTheme();
   const [dragging, setDragging] = useState(false);
   const [preview, setPreview] = useState(null);
   const [parsed, setParsed] = useState(null);
@@ -109,6 +111,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
 }
 
 export function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
+  const C = useTheme();
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [restoring, setRestoring] = useState(null);
@@ -209,6 +212,7 @@ export function HistoryModal({ scriptId, projectName, onRestore, onClose }) {
 }
 
 export function OnboardingModal({ onClose, isDark }) {
+  const C = useTheme();
   const [step, setStep] = useState(0);
 
   const steps = [
@@ -346,6 +350,7 @@ export function OnboardingModal({ onClose, isDark }) {
 }
 
 export function TrashModal({ trashedProjects, onRestore, onDeleteForever, onClose }) {
+  const C = useTheme();
   return (
     <div className="overlay-in" onClick={onClose} style={{
       position:"fixed", inset:0, background:"rgba(0,0,0,.65)",
@@ -472,6 +477,7 @@ export const GUIDE_ELEMENTS = [
 
 
 export function HelpModal({ onClose, isDark }) {
+  const C = useTheme();
   const [active, setActive] = useState(0);
   const el = GUIDE_ELEMENTS[active];
 
@@ -624,6 +630,7 @@ export function HelpModal({ onClose, isDark }) {
 }
 
 export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
+  const C = useTheme();
   const [format, setFormat]         = useState("hollywood");
   const [author, setAuthor]         = useState("");
   const [sceneNumbers, setSceneNumbers] = useState(false);

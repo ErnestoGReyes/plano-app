@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { C, RADIUS, SHADOW, FONT_DISPLAY, hexToRgb } from "../design/tokens";
+import { RADIUS, SHADOW, FONT_DISPLAY, hexToRgb } from "../design/tokens";
+import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 
 export function Btn({ onClick, children, style={}, title, variant="ghost", disabled=false }) {
+  const C = useTheme();
   const base = {
     border:"none", borderRadius:RADIUS.sm, fontSize:12, fontWeight:600,
     display:"flex", alignItems:"center", gap:5,
@@ -38,6 +40,7 @@ export function Btn({ onClick, children, style={}, title, variant="ghost", disab
 }
 
 export function Modal({ open, onClose, title, children, width=420 }) {
+  const C = useTheme();
   useEffect(() => {
     if (!open) return;
     const handler = e => { if (e.key==="Escape") onClose(); };
