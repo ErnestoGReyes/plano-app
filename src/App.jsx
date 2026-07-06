@@ -720,6 +720,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
       transition:"background .3s",
       display:isMobile||focusMode ? "block" : "flex",
       justifyContent:isMobile||focusMode ? "flex-start" : "center",
+      alignItems:isMobile||focusMode ? undefined : "flex-start",
     }}>
       <div style={isMobile||focusMode ? {maxWidth:focusMode?580:"100%", margin:"0 auto"} : {
         width:"100%", maxWidth:880, position:"relative",
