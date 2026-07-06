@@ -1,7 +1,9 @@
 import { T } from "../design/tokens";
+import { normalizeNote, noteCategoryMeta } from "./screenplay";
 
-export function exportToPDFPro(blocks, projectName, { format, author, sceneNumbers }) {
+export function exportToPDFPro(blocks, projectName, { format, author, sceneNumbers, noteCategories = [] }) {
   const isHollywood = format === "hollywood";
+  const includeNotes = new Set(noteCategories);
 
   // ── Métricas de página ────────────────────────────────────────────────────
   // Todas las medidas en puntos (1in = 72pt)
@@ -73,6 +75,14 @@ export function exportToPDFPro(blocks, projectName, { format, author, sceneNumbe
     } else if (t === T.TRANSITION) {
       elements.push({ type:"transition", lines:[b.text.toUpperCase()] });
     }
+
+    // Nota de dirección — solo si su categoría fue elegida al exportar
+    const note = normalizeNote(b.note);
+    if (note.text.trim() && includeNotes.has(note.category)) {
+      const meta = noteCategoryMeta(note.category);
+      const label = `${meta.emoji} ${meta.label.toUpperCase()}: `;
+      elements.push({ type:"note", lines: wrapText(label + note.text, actionMaxChars) });
+    }
   });
 
   // ── Espaciado vertical por tipo (en puntos) ───────────────────────────────
@@ -84,6 +94,7 @@ export function exportToPDFPro(blocks, projectName, { format, author, sceneNumbe
     paren:      { before:0,  after:0  },
     dialogue:   { before:0,  after:12 },
     transition: { before:12, after:12 },
+    note:       { before:2,  after:10 },
   };
 
   // ── Paginación ────────────────────────────────────────────────────────────
@@ -138,6 +149,11 @@ export function exportToPDFPro(blocks, projectName, { format, author, sceneNumbe
         ).join("");
       } else if (el.type === "transition") {
         html = `<div style="position:absolute;top:${el.y}pt;right:${mr}pt;font-weight:bold;">${el.lines[0]}</div>`;
+      } else if (el.type === "note") {
+        html = el.lines.map((ln, i) =>
+          `<div style="position:absolute;top:${el.y + i*LINE_H}pt;left:${ml+14}pt;right:${mr}pt;
+            font-style:italic;font-size:9.5pt;color:#555;border-left:2px solid #999;padding-left:6pt;">${ln || "&nbsp;"}</div>`
+        ).join("");
       }
       return html;
     };

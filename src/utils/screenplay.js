@@ -1,4 +1,4 @@
-import { T, CHARACTER_PALETTE } from "../design/tokens";
+import { T, CHARACTER_PALETTE_DARK, CHARACTER_PALETTE_LIGHT } from "../design/tokens";
 
 export function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -44,12 +44,13 @@ export function typeColor(type, C) {
            [T.PAREN]:"#C0A060",[T.DIALOGUE]:C.accent,[T.TRANSITION]:C.purple }[type] || C.textSec;
 }
 
-export function extractCharacters(blocks) {
+export function extractCharacters(blocks, isDark = true) {
+  const palette = isDark ? CHARACTER_PALETTE_DARK : CHARACTER_PALETTE_LIGHT;
   const map = {}; let ci = 0;
   blocks.forEach(b => {
     if (b.type === T.CHARACTER && b.text.trim()) {
       const n = b.text.trim().toUpperCase();
-      if (!map[n]) { map[n] = { color: CHARACTER_PALETTE[ci++ % CHARACTER_PALETTE.length], lines: 0 }; }
+      if (!map[n]) { map[n] = { color: palette[ci++ % palette.length], lines: 0 }; }
       map[n].lines++;
     }
   });
@@ -110,4 +111,40 @@ export function countWords(blocks) {
 
 export function estimatePages(blocks) {
   return Math.max(1, Math.ceil(blocks.reduce((a,b) => a + (b.text?.length||0), 0) / 1500));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NOTAS DE DIRECCIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+// El campo `note` de un bloque empezó como un string simple (sinopsis en el
+// corkboard, texto libre en el panel "Notas"). Ahora es un objeto:
+//   { text, category, onScreen }
+// normalizeNote() acepta strings viejos (proyectos guardados antes de este
+// cambio) y objetos nuevos, así ningún dato existente se rompe.
+
+export const NOTE_CATEGORIES = [
+  { id:"general",  emoji:"📌", label:"General" },
+  { id:"camera",   emoji:"🎥", label:"Cámara" },
+  { id:"lighting", emoji:"💡", label:"Iluminación" },
+  { id:"sound",    emoji:"🔊", label:"Sonido" },
+  { id:"acting",   emoji:"🎭", label:"Actuación" },
+  { id:"editing",  emoji:"🎬", label:"Montaje" },
+];
+
+export function noteCategoryMeta(id) {
+  return NOTE_CATEGORIES.find(c => c.id === id) || NOTE_CATEGORIES[0];
+}
+
+// Reusa colores que ya existen en el theme (no hace falta sumar tokens nuevos)
+export function noteCategoryColor(id, C) {
+  return {
+    general:C.textMuted, camera:C.purple, lighting:C.yellow,
+    sound:C.accent, acting:C.green, editing:C.red,
+  }[id] || C.textMuted;
+}
+
+export function normalizeNote(note) {
+  if (!note) return { text:"", category:"general", onScreen:true };
+  if (typeof note === "string") return { text:note, category:"general", onScreen:true };
+  return { text:note.text||"", category:note.category||"general", onScreen: note.onScreen !== false };
 }

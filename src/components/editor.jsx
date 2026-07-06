@@ -3,7 +3,7 @@ import { T, RADIUS, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
-import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder } from "../utils/screenplay";
+import { typeLabel, typeName, typeTooltip, typeColor, getPlaceholder, NOTE_CATEGORIES, noteCategoryMeta, noteCategoryColor, normalizeNote } from "../utils/screenplay";
 
 export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, onImport, onHistory,
   projectName, saving, canUndo, canRedo, onUndo, onRedo, focusMode, onFocusMode, isMobile }) {
@@ -95,11 +95,12 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
 
 function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, onFocus,
   onKeyDown, inputRef, charSuggestions, onAcceptSuggestion, isMobile,
-  onAddBlockAfter, onDeleteBlock }) {
+  onAddBlockAfter, onDeleteBlock, onNoteChange }) {
   const C = useTheme();
   const color = characterColors[block.text?.trim()?.toUpperCase()] || C.green;
   const [showSug, setShowSug] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [noteEditing, setNoteEditing] = useState(false);
 
   const base = {
     width:"100%", border:"none", outline:"none", background:"transparent",
@@ -127,7 +128,10 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
     [T.ACTION]:     {},
   };
 
-  const hasNote = !!block.note?.trim();
+  const noteObj = normalizeNote(block.note);
+  const hasNoteText = !!noteObj.text.trim();
+  const noteMeta = noteCategoryMeta(noteObj.category);
+  const noteCol = noteCategoryColor(noteObj.category, C);
   const col = typeColor(block.type, C);
 
   const handleChange = e => {
@@ -156,11 +160,14 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
         </div>
       )}
 
-      {/* Note indicator */}
-      {hasNote && (
-        <div title={block.note} style={{position:"absolute", right:4, top:6,
-          width:7, height:7, borderRadius:"50%", background:C.yellow,
-          boxShadow:`0 0 6px ${C.yellow}80`}}/>
+      {/* Note indicator — solo cuando la nota existe pero está OCULTA del flujo;
+          si está visible, se muestra abajo integrada (ver NoteBlock más abajo) */}
+      {hasNoteText && !noteObj.onScreen && !noteEditing && (
+        <div onClick={e=>{e.stopPropagation();setNoteEditing(true);}}
+          title={`${noteMeta.emoji} ${noteMeta.label} (oculta) — click para editar`}
+          style={{position:"absolute", right:4, top:6, cursor:"pointer",
+          width:7, height:7, borderRadius:"50%", background:noteCol,
+          boxShadow:`0 0 6px ${noteCol}80`}}/>
       )}
 
       <textarea ref={inputRef} value={block.text}
@@ -177,6 +184,70 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
         rows={1} style={styles[block.type]||base}
         placeholder={isActive ? getPlaceholder(block.type) : ""}
         spellCheck autoCorrect="on" autoCapitalize="sentences"/>
+
+      {/* Nota de dirección — integrada en el flujo, no como overlay flotante */}
+      {noteEditing ? (
+        <div onClick={e=>e.stopPropagation()} style={{
+          margin:"4px 0 8px", padding:8, borderRadius:RADIUS.sm,
+          background:C.bgCard, border:`1px solid ${C.borderBright}`}}>
+          <div style={{display:"flex", gap:4, marginBottom:6, flexWrap:"wrap"}}>
+            {NOTE_CATEGORIES.map(cat => {
+              const on = noteObj.category===cat.id;
+              const c2 = noteCategoryColor(cat.id, C);
+              return (
+                <button key={cat.id} onClick={()=>onNoteChange(index,{category:cat.id})}
+                  title={cat.label}
+                  style={{padding:"2px 7px", borderRadius:RADIUS.pill, fontSize:10.5,
+                    background:on?`rgba(${hexToRgb(c2)},.18)`:"transparent",
+                    border:on?`1px solid rgba(${hexToRgb(c2)},.5)`:`1px solid ${C.border}`,
+                    color:on?c2:C.textMuted, cursor:"pointer", fontFamily:"inherit"}}>
+                  {cat.emoji} {cat.label}
+                </button>
+              );
+            })}
+          </div>
+          <textarea autoFocus value={noteObj.text}
+            onChange={e=>onNoteChange(index,{text:e.target.value})}
+            placeholder="Nota de dirección..." rows={2}
+            style={{width:"100%", background:"transparent", border:"none", outline:"none",
+              resize:"vertical", color:C.textPrimary, fontSize:12.5, lineHeight:1.5,
+              fontFamily:"'Inter',system-ui,sans-serif"}}/>
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:4}}>
+            <button onClick={()=>onNoteChange(index,{onScreen:!noteObj.onScreen})}
+              style={{display:"flex", alignItems:"center", gap:4, background:"none", border:"none",
+                color:C.textMuted, fontSize:10.5, cursor:"pointer", fontFamily:"inherit"}}>
+              {noteObj.onScreen ? "👁 Visible en el guion" : "🚫 Oculta en el guion"}
+            </button>
+            <div style={{display:"flex", gap:10}}>
+              {hasNoteText && (
+                <button onClick={()=>{onNoteChange(index,{text:""});setNoteEditing(false);}}
+                  style={{background:"none", border:"none", color:C.red, fontSize:10.5,
+                    cursor:"pointer", fontFamily:"inherit"}}>Borrar</button>
+              )}
+              <button onClick={()=>setNoteEditing(false)}
+                style={{background:"none", border:"none", color:C.accent, fontSize:10.5,
+                  fontWeight:600, cursor:"pointer", fontFamily:"inherit"}}>Listo</button>
+            </div>
+          </div>
+        </div>
+      ) : hasNoteText && noteObj.onScreen ? (
+        <div onClick={e=>{e.stopPropagation();setNoteEditing(true);}} style={{
+          display:"flex", alignItems:"flex-start", gap:6, margin:"4px 0 8px",
+          padding:"5px 10px", borderRadius:RADIUS.xs, cursor:"pointer",
+          background:`rgba(${hexToRgb(noteCol)},.08)`, borderLeft:`2px solid ${noteCol}`,
+          fontSize:11.5, lineHeight:1.5, color:C.textSec, fontFamily:"'Inter',system-ui,sans-serif"}}>
+          <span style={{flexShrink:0}}>{noteMeta.emoji}</span>
+          <span style={{flex:1, fontStyle:"italic", overflow:"hidden",
+            display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical"}}>{noteObj.text}</span>
+        </div>
+      ) : !hasNoteText && isActive ? (
+        <button onClick={e=>{e.stopPropagation();setNoteEditing(true);}} style={{
+          display:"inline-flex", alignItems:"center", gap:4, margin:"2px 0 6px",
+          padding:"3px 9px", borderRadius:RADIUS.pill, border:`1px dashed ${C.border}`,
+          background:"none", color:C.textFaint, fontSize:10.5, cursor:"pointer", fontFamily:"inherit"}}>
+          📌 + nota de dirección
+        </button>
+      ) : null}
 
       {/* Autocomplete dropdown */}
       {showSug && block.type===T.CHARACTER && charSuggestions.length>0 && block.text.trim() && (

@@ -3,7 +3,7 @@ import { RADIUS, SHADOW, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
-import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor } from "../utils/screenplay";
+import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor, normalizeNote, NOTE_CATEGORIES, noteCategoryMeta, noteCategoryColor } from "../utils/screenplay";
 
 export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
   onRenameProject, onReorderProjects, onOpenTrash,
@@ -407,7 +407,7 @@ export function CorkboardView({ blocks, characterColors, onReorder, onCardClick,
 
               {/* Synopsis — editable, usa la nota del heading */}
               <textarea
-                value={g.heading.note || ""}
+                value={normalizeNote(g.heading.note).text}
                 onClick={e=>e.stopPropagation()}
                 onChange={e=>onNoteChange(blocks.indexOf(g.heading), e.target.value)}
                 placeholder="Sinopsis breve de la escena..."
@@ -480,7 +480,11 @@ export function CharactersPanel({ characters }) {
 export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
   const C = useTheme();
   const block = blocks[activeBlock];
-  const withNotes = blocks.map((b,i)=>({...b,index:i})).filter(b=>b.note?.trim());
+  const activeNote = block ? normalizeNote(block.note) : null;
+  const withNotes = blocks
+    .map((b,i)=>({...b, index:i, note:normalizeNote(b.note)}))
+    .filter(b=>b.note.text.trim());
+
   return (
     <div>
       {block ? (
@@ -489,17 +493,38 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
             letterSpacing:1.5, fontWeight:700, marginBottom:8}}>Nota del bloque activo</p>
           <div style={{padding:"12px", borderRadius:RADIUS.sm, background:C.bgCard,
             border:`1px solid ${C.borderBright}`, marginBottom:16}}>
-            <p style={{fontSize:10, color:C.textMuted, marginBottom:6}}>
+            <p style={{fontSize:10, color:C.textMuted, marginBottom:8}}>
               <span style={{color:typeColor(block.type, C)}}>[{typeLabel(block.type)}]</span>{" "}
               {block.text?.slice(0,40)||(
                 <span style={{fontStyle:"italic"}}>(vacío)</span>
               )}
             </p>
-            <textarea value={block.note||""} onChange={e=>onNoteChange(activeBlock,e.target.value)}
+            <div style={{display:"flex", gap:4, marginBottom:8, flexWrap:"wrap"}}>
+              {NOTE_CATEGORIES.map(cat => {
+                const on = activeNote.category===cat.id;
+                const c2 = noteCategoryColor(cat.id, C);
+                return (
+                  <button key={cat.id} onClick={()=>onNoteChange(activeBlock,{category:cat.id})}
+                    title={cat.label}
+                    style={{padding:"2px 7px", borderRadius:RADIUS.pill, fontSize:10.5,
+                      background:on?`rgba(${hexToRgb(c2)},.18)`:"transparent",
+                      border:on?`1px solid rgba(${hexToRgb(c2)},.5)`:`1px solid ${C.border}`,
+                      color:on?c2:C.textMuted, cursor:"pointer", fontFamily:"inherit"}}>
+                    {cat.emoji} {cat.label}
+                  </button>
+                );
+              })}
+            </div>
+            <textarea value={activeNote.text} onChange={e=>onNoteChange(activeBlock,{text:e.target.value})}
               placeholder="Anotá ideas, referencias, preguntas..."
               rows={4} style={{width:"100%", background:"transparent", border:"none",
                 color:C.textSec, fontSize:13, resize:"vertical", outline:"none",
                 lineHeight:1.65, fontFamily:"inherit"}}/>
+            <button onClick={()=>onNoteChange(activeBlock,{onScreen:!activeNote.onScreen})}
+              style={{display:"flex", alignItems:"center", gap:5, background:"none", border:"none",
+                color:C.textMuted, fontSize:11, cursor:"pointer", fontFamily:"inherit", marginTop:6, padding:0}}>
+              {activeNote.onScreen ? "👁 Visible en el guion" : "🚫 Oculta en el guion"}
+            </button>
           </div>
         </>
       ) : (
@@ -513,16 +538,22 @@ export function NotesPanel({ activeBlock, blocks, onNoteChange }) {
             letterSpacing:1.5, fontWeight:700, marginBottom:8}}>
             Todas las notas · {withNotes.length}
           </p>
-          {withNotes.map(b => (
-            <div key={b.id} style={{padding:"10px 12px", marginBottom:5, borderRadius:RADIUS.sm,
-              background:C.bgCard, border:`1px solid ${C.border}`,
-              borderLeft:`3px solid ${C.yellow}`}}>
-              <p style={{fontSize:10, color:C.yellow, marginBottom:4, fontFamily:"monospace"}}>
-                {b.text?.slice(0,32)||"(vacío)"}
-              </p>
-              <p style={{fontSize:12, color:C.textSec, lineHeight:1.55}}>{b.note}</p>
-            </div>
-          ))}
+          {withNotes.map(b => {
+            const meta = noteCategoryMeta(b.note.category);
+            const c2 = noteCategoryColor(b.note.category, C);
+            return (
+              <div key={b.id} style={{padding:"10px 12px", marginBottom:5, borderRadius:RADIUS.sm,
+                background:C.bgCard, border:`1px solid ${C.border}`,
+                borderLeft:`3px solid ${c2}`, opacity:b.note.onScreen?1:.6}}>
+                <p style={{fontSize:10, color:c2, marginBottom:4, fontFamily:"monospace",
+                  display:"flex", alignItems:"center", gap:5}}>
+                  <span>{meta.emoji} {b.text?.slice(0,28)||"(vacío)"}</span>
+                  {!b.note.onScreen && <span style={{color:C.textFaint, fontStyle:"italic"}}>· oculta</span>}
+                </p>
+                <p style={{fontSize:12, color:C.textSec, lineHeight:1.55}}>{b.note.text}</p>
+              </div>
+            );
+          })}
         </>
       ) : (
         <EmptyState icon={<Icons.Notes style={{width:22,height:22}}/>}

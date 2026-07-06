@@ -3,7 +3,7 @@ import { T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb } from "./design/tokens"
 import { useTheme, ThemeProvider } from "./contexts/ThemeContext";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
-import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups } from "./utils/screenplay";
+import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
 import { exportToFountain } from "./utils/fountain";
 import { InjectStyles } from "./styles/globalStyles";
 import { useUndoable } from "./hooks/useUndoable";
@@ -407,7 +407,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
   }, [undo, redo, isMobile, projects, selectedId, persistScript]);
 
   // ── Derivados ──────────────────────────────────────────────────────────────
-  const characters = useMemo(() => extractCharacters(blocks), [blocks]);
+  const characters = useMemo(() => extractCharacters(blocks, isDark), [blocks, isDark]);
   const scenes = useMemo(() => extractScenes(blocks), [blocks]);
   // Escena "actual" = la última cuyo encabezado quedó en o antes del cursor,
   // no solo cuando el cursor está literalmente sobre esa línea de encabezado.
@@ -454,7 +454,15 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
   }, [blocks, updateBlocks]);
 
   const updateNote = useCallback((index, note) => {
-    updateBlocks(blocks.map((b,i) => i===index ? {...b, note} : b));
+    updateBlocks(blocks.map((b,i) => {
+      if (i!==index) return b;
+      // Los llamadores viejos (corkboard, panel de notas) pasan un string y
+      // solo tocan el texto; los nuevos (categoría, mostrar/ocultar) pasan un
+      // objeto parcial. Cualquiera de los dos se fusiona sobre la nota actual.
+      const current = normalizeNote(b.note);
+      const patch = typeof note === "string" ? { text: note } : note;
+      return { ...b, note: { ...current, ...patch } };
+    }));
   }, [blocks, updateBlocks]);
 
   const handleKeyDown = useCallback((e, index) => {
@@ -743,6 +751,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
               <ScriptBlock key={block.id} block={block} index={index}
                 isActive={index===activeIndex} characterColors={characterColors}
                 onUpdate={updateBlock} onFocus={setActiveIndex}
+                onNoteChange={updateNote}
                 onKeyDown={handleKeyDown} isMobile={isMobile}
                 charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
                 onAcceptSuggestion={updateBlock}
@@ -759,6 +768,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
           <ScriptBlock key={block.id} block={block} index={index}
             isActive={index===activeIndex} characterColors={characterColors}
             onUpdate={updateBlock} onFocus={setActiveIndex}
+            onNoteChange={updateNote}
             onKeyDown={handleKeyDown} isMobile={isMobile}
             charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
             onAcceptSuggestion={updateBlock}

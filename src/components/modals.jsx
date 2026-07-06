@@ -3,7 +3,7 @@ import { T, RADIUS, SHADOW, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn, Modal } from "./common";
-import { uid } from "../utils/screenplay";
+import { uid, NOTE_CATEGORIES, noteCategoryColor } from "../utils/screenplay";
 import { parseFountain } from "../utils/fountain";
 import { exportToPDFPro } from "../utils/pdfExport";
 import { supabase } from "../lib/supabase";
@@ -634,7 +634,12 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
   const [format, setFormat]         = useState("hollywood");
   const [author, setAuthor]         = useState("");
   const [sceneNumbers, setSceneNumbers] = useState(false);
+  const [noteCategories, setNoteCategories] = useState([]); // vacío = no incluir ninguna nota
   const [generating, setGenerating] = useState(false);
+
+  const toggleNoteCategory = (id) => {
+    setNoteCategories(prev => prev.includes(id) ? prev.filter(c=>c!==id) : [...prev, id]);
+  };
 
   const inputStyle = {
     width:"100%", background:C.bgCard, border:`1px solid ${C.borderBright}`,
@@ -652,7 +657,7 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
   const generate = () => {
     setGenerating(true);
     setTimeout(() => {
-      exportToPDFPro(blocks, projectName, { format, author, sceneNumbers });
+      exportToPDFPro(blocks, projectName, { format, author, sceneNumbers, noteCategories });
       setGenerating(false);
       onClose();
     }, 100);
@@ -789,6 +794,31 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
               <div style={{fontSize:11, color:C.textMuted}}>Agrega número al inicio de cada encabezado</div>
             </div>
           </label>
+        </div>
+
+        {/* Notas de dirección */}
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+            textTransform:"uppercase", marginBottom:4}}>Notas de dirección en el PDF</div>
+          <div style={{fontSize:11, color:C.textMuted, marginBottom:10}}>
+            El guion se exporta siempre limpio. Elegí qué categorías de notas querés incluir además del texto.
+          </div>
+          <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
+            {NOTE_CATEGORIES.map(cat => {
+              const on = noteCategories.includes(cat.id);
+              const c2 = noteCategoryColor(cat.id, C);
+              return (
+                <button key={cat.id} onClick={()=>toggleNoteCategory(cat.id)} type="button"
+                  style={{padding:"6px 11px", borderRadius:RADIUS.pill, fontSize:12,
+                    background:on?`rgba(${hexToRgb(c2)},.16)`:"none",
+                    border:`1.5px solid ${on?c2:C.borderBright}`,
+                    color:on?c2:C.textMuted, cursor:"pointer", fontFamily:"inherit",
+                    display:"flex", alignItems:"center", gap:5, transition:"all .15s"}}>
+                  {cat.emoji} {cat.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Botón */}

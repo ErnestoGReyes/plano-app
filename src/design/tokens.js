@@ -11,9 +11,37 @@ export const T = {
   TRANSITION: "transition",
 };
 
-export const CHARACTER_PALETTE = [
-  "#C0A060","#A07850","#D4B870","#8B6A40","#E8C880",
-  "#B89050","#F0D890","#9A7840","#C8A860","#7A5830",
+// Paleta de personajes — antes eran 10 tonos dorado/marrón muy parecidos entre
+// sí (misma familia de color, solo cambiaba el brillo), lo que hacía difícil
+// distinguir personajes a simple vista. Ahora son 10 matices bien separados en
+// la rueda de color (dorado, rojo, verde, violeta, naranja, azul, verde-azulado,
+// magenta, cian, oliva), con la misma saturación/luminosidad que el resto de la
+// paleta noir para que no rompan la estética. Igual que accent/green/purple/
+// red/yellow más abajo, hay una versión clara (fondo oscuro) y una oscura y
+// saturada (fondo claro) para mantener buen contraste en los dos temas.
+export const CHARACTER_PALETTE_DARK = [
+  "#C0A060", // dorado
+  "#D67070", // rojo
+  "#7CAE6E", // verde
+  "#A88CB0", // violeta
+  "#D08850", // naranja
+  "#7A96D0", // azul
+  "#5FA8A0", // verde azulado
+  "#C87CA8", // magenta
+  "#6FC0D0", // cian
+  "#A8A050", // oliva
+];
+export const CHARACTER_PALETTE_LIGHT = [
+  "#8B6820", // dorado
+  "#803030", // rojo
+  "#4A6830", // verde
+  "#604858", // violeta
+  "#8A5020", // naranja
+  "#3C5080", // azul
+  "#2C6058", // verde azulado
+  "#78355C", // magenta
+  "#2C6878", // cian
+  "#6B6020", // oliva
 ];
 
 export const RADIUS = { xs:4, sm:8, md:12, lg:16, pill:20 };
