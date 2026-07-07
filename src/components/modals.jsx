@@ -46,9 +46,12 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:RADIUS.lg, width:"100%", maxWidth:420,
-        boxShadow:`0 24px 60px ${C.shadow}`, padding:"24px",
+        boxShadow:`0 24px 60px ${C.shadow}`,
+        maxHeight:"90dvh", display:"flex", flexDirection:"column",
       }}>
-        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20}}>
+        {/* Header — fijo */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"20px 24px 0", flexShrink:0}}>
           <div>
             <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
               Importar Fountain
@@ -61,33 +64,34 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
             cursor:"pointer", padding:"4px 6px", display:"flex"}}><Icons.Close/></button>
         </div>
 
-        {/* Drop zone */}
-        <div
-          onDragOver={e=>{e.preventDefault();setDragging(true)}}
-          onDragLeave={()=>setDragging(false)}
-          onDrop={e=>{e.preventDefault();setDragging(false);handleFile(e.dataTransfer.files[0])}}
-          onClick={()=>fileRef.current?.click()}
-          style={{
-            border:`2px dashed ${dragging?C.accent:C.borderBright}`,
-            borderRadius:RADIUS.md, padding:"32px 20px", textAlign:"center",
-            background:dragging?C.accentGlow:"transparent",
-            cursor:"pointer", transition:"all .15s", marginBottom:16,
-          }}>
-          <Icons.Import style={{width:28,height:28,color:C.textMuted,margin:"0 auto 10px"}}/>
-          <div style={{fontSize:13, color:C.textSec, fontWeight:500}}>
-            {preview ? `✓ ${fileName}.fountain` : "Arrastrá tu archivo .fountain acá"}
+        {/* Body — scrollea si el preview + input no entran en la pantalla */}
+        <div style={{padding:"18px 24px 4px", overflowY:"auto", flex:1, minHeight:0}}>
+          {/* Drop zone */}
+          <div
+            onDragOver={e=>{e.preventDefault();setDragging(true)}}
+            onDragLeave={()=>setDragging(false)}
+            onDrop={e=>{e.preventDefault();setDragging(false);handleFile(e.dataTransfer.files[0])}}
+            onClick={()=>fileRef.current?.click()}
+            style={{
+              border:`2px dashed ${dragging?C.accent:C.borderBright}`,
+              borderRadius:RADIUS.md, padding:"32px 20px", textAlign:"center",
+              background:dragging?C.accentGlow:"transparent",
+              cursor:"pointer", transition:"all .15s", marginBottom:16,
+            }}>
+            <Icons.Import style={{width:28,height:28,color:C.textMuted,margin:"0 auto 10px"}}/>
+            <div style={{fontSize:13, color:C.textSec, fontWeight:500}}>
+              {preview ? `✓ ${fileName}.fountain` : "Arrastrá tu archivo .fountain acá"}
+            </div>
+            <div style={{fontSize:11, color:C.textMuted, marginTop:4}}>
+              {preview ? `${preview.scenes} escenas · ${preview.chars} personajes · ${preview.blocks} bloques`
+                : "o hacé click para seleccionar"}
+            </div>
+            <input ref={fileRef} type="file" accept=".fountain" style={{display:"none"}}
+              onChange={e=>handleFile(e.target.files[0])}/>
           </div>
-          <div style={{fontSize:11, color:C.textMuted, marginTop:4}}>
-            {preview ? `${preview.scenes} escenas · ${preview.chars} personajes · ${preview.blocks} bloques`
-              : "o hacé click para seleccionar"}
-          </div>
-          <input ref={fileRef} type="file" accept=".fountain" style={{display:"none"}}
-            onChange={e=>handleFile(e.target.files[0])}/>
-        </div>
 
-        {preview && (
-          <>
-            <div style={{marginBottom:16}}>
+          {preview && (
+            <div style={{marginBottom:4}}>
               <div style={{fontSize:11, fontWeight:600, color:C.textMuted,
                 letterSpacing:.5, textTransform:"uppercase", marginBottom:8}}>Nombre del guion</div>
               <input value={fileName} onChange={e=>setFileName(e.target.value)}
@@ -95,6 +99,12 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
                 onFocus={e=>e.target.style.borderColor=C.accent}
                 onBlur={e=>e.target.style.borderColor=C.borderBright}/>
             </div>
+          )}
+        </div>
+
+        {/* Footer — fijo, solo aparece (y queda siempre visible) una vez que hay preview */}
+        {preview && (
+          <div style={{padding:"14px 24px 24px", flexShrink:0}}>
             <button onClick={()=>onImport(parsed, fileName||"Guion importado")} style={{
               width:"100%", padding:"12px", borderRadius:RADIUS.md, border:"none",
               background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
@@ -103,7 +113,7 @@ export function ImportFountainModal({ onImport, onClose, isDark }) {
             }}>
               <Icons.Import/> Importar guion
             </button>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -271,15 +281,16 @@ export function OnboardingModal({ onClose, isDark }) {
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
         borderRadius:RADIUS.lg, width:"100%", maxWidth:440,
         boxShadow:`0 32px 80px ${C.shadow}`,
-        overflow:"hidden",
+        maxHeight:"90dvh", display:"flex", flexDirection:"column", overflow:"hidden",
       }}>
-        {/* Progress bar */}
-        <div style={{height:3, background:C.border}}>
+        {/* Progress bar — fija arriba de todo */}
+        <div style={{height:3, background:C.border, flexShrink:0}}>
           <div style={{height:"100%", background:C.accent, borderRadius:RADIUS.xs,
             width:`${((step+1)/steps.length)*100}%`, transition:"width .3s ease"}}/>
         </div>
 
-        <div style={{padding:"32px 28px 28px"}}>
+        {/* Contenido del paso — scrollea si el texto no entra (pantallas chicas / letra grande) */}
+        <div style={{padding:"32px 28px 4px", overflowY:"auto", flex:1, minHeight:0}}>
           {/* Icon */}
           <div style={{display:"flex", justifyContent:"center", marginBottom:24}}>
             {s.icon}
@@ -297,15 +308,17 @@ export function OnboardingModal({ onClose, isDark }) {
           {/* Tip */}
           {s.tip && (
             <div style={{background:C.bgCard, border:`1px solid ${C.border}`,
-              borderRadius:RADIUS.md, padding:"10px 14px", marginBottom:20,
+              borderRadius:RADIUS.md, padding:"10px 14px", marginBottom:4,
               display:"flex", gap:8, alignItems:"flex-start"}}>
               <span style={{fontSize:13, flexShrink:0}}>💡</span>
               <p style={{fontSize:12, color:C.textMuted, margin:0, lineHeight:1.6}}>{s.tip}</p>
             </div>
           )}
+        </div>
 
-          {/* Step dots */}
-          <div style={{display:"flex", justifyContent:"center", gap:6, marginBottom:24}}>
+        {/* Footer — fijo abajo, siempre visible: dots + botones + saltar */}
+        <div style={{padding:"20px 28px 28px", flexShrink:0}}>
+          <div style={{display:"flex", justifyContent:"center", gap:6, marginBottom:20}}>
             {steps.map((_,i) => (
               <div key={i} onClick={()=>setStep(i)} style={{
                 width:i===step?20:6, height:6, borderRadius:RADIUS.xs,
@@ -315,7 +328,6 @@ export function OnboardingModal({ onClose, isDark }) {
             ))}
           </div>
 
-          {/* Buttons */}
           <div style={{display:"flex", gap:8}}>
             {step > 0 && (
               <Btn onClick={()=>setStep(v=>v-1)}
@@ -333,7 +345,6 @@ export function OnboardingModal({ onClose, isDark }) {
             </button>
           </div>
 
-          {/* Skip */}
           {!isLast && (
             <button onClick={onClose} style={{
               display:"block", width:"100%", marginTop:10, background:"none",

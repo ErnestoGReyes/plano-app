@@ -55,15 +55,16 @@ export function Modal({ open, onClose, title, children, width=420 }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`, borderRadius:RADIUS.lg,
-        width:"100%", maxWidth:width, maxHeight:"90vh", overflowY:"auto",
+        width:"100%", maxWidth:width, maxHeight:"90dvh",
+        display:"flex", flexDirection:"column",
         boxShadow:SHADOW.modal(C.shadow),
       }}>
         <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
-          padding:"16px 20px", borderBottom:`1px solid ${C.border}`}}>
+          padding:"16px 20px", borderBottom:`1px solid ${C.border}`, flexShrink:0}}>
           <span style={{fontFamily:FONT_DISPLAY, fontWeight:600, fontSize:17, color:C.textPrimary}}>{title}</span>
           <Btn onClick={onClose} style={{padding:"5px 7px", color:C.textMuted}}><Icons.Close/></Btn>
         </div>
-        <div style={{padding:20}}>{children}</div>
+        <div style={{padding:20, overflowY:"auto", flex:1, minHeight:0}}>{children}</div>
       </div>
     </div>
   );
