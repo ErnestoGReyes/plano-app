@@ -671,11 +671,13 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
     }}>
       <div className="modal-in" onClick={e=>e.stopPropagation()} style={{
         background:C.bgPanel, border:`1px solid ${C.borderBright}`,
-        borderRadius:RADIUS.lg, padding:"28px 24px", width:"100%", maxWidth:420,
+        borderRadius:RADIUS.lg, width:"100%", maxWidth:420,
         boxShadow:`0 24px 60px ${C.shadow}`,
+        maxHeight:"90dvh", display:"flex", flexDirection:"column",
       }}>
-        {/* Header */}
-        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22}}>
+        {/* Header — fijo, no scrollea */}
+        <div style={{display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"20px 24px 0", flexShrink:0}}>
           <div>
             <div style={{fontFamily:"'Courier Prime',monospace", fontWeight:700, fontSize:16, color:C.textPrimary}}>
               Exportar PDF
@@ -688,149 +690,154 @@ export function ExportPDFModal({ blocks, projectName, onClose, isDark }) {
           </button>
         </div>
 
-        {/* Mini preview de portada */}
-        <div style={{
-          display:"flex", justifyContent:"center", marginBottom:20,
-        }}>
+        {/* Body — scrollea si no entra en la pantalla */}
+        <div style={{padding:"18px 24px 4px", overflowY:"auto", flex:1, minHeight:0}}>
+          {/* Mini preview de portada */}
           <div style={{
-            width:format==="hollywood"?92:88,
-            height:format==="hollywood"?119:124,
-            background:isDark?"#1A1812":"#FAF8F2",
-            border:`1px solid ${C.borderBright}`,
-            borderRadius:RADIUS.xs,
-            boxShadow:`0 8px 24px ${C.shadow}, 0 1px 0 ${C.borderBright}`,
-            display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
-            padding:"10px 8px", textAlign:"center", transition:"all .25s cubic-bezier(.16,1,.3,1)",
-            position:"relative", overflow:"hidden",
+            display:"flex", justifyContent:"center", marginBottom:20,
           }}>
-            {/* Línea sutil de "página" */}
-            <div style={{position:"absolute", top:6, left:6, right:6, height:1, background:C.borderBright, opacity:.3}}/>
             <div style={{
-              fontFamily:"'Courier Prime',monospace", fontWeight:700,
-              fontSize:7, color:isDark?"#D8CCAA":"#1A1510",
-              lineHeight:1.3, marginBottom:6, wordBreak:"break-word",
+              width:format==="hollywood"?92:88,
+              height:format==="hollywood"?119:124,
+              background:isDark?"#1A1812":"#FAF8F2",
+              border:`1px solid ${C.borderBright}`,
+              borderRadius:RADIUS.xs,
+              boxShadow:`0 8px 24px ${C.shadow}, 0 1px 0 ${C.borderBright}`,
+              display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+              padding:"10px 8px", textAlign:"center", transition:"all .25s cubic-bezier(.16,1,.3,1)",
+              position:"relative", overflow:"hidden", flexShrink:0,
             }}>
-              {(projectName||"GUION").toUpperCase().slice(0,28)}
-            </div>
-            {author && (
-              <>
-                <div style={{fontSize:4.5, color:isDark?"#8A8070":"#8A7860", marginBottom:2}}>Escrito por</div>
-                <div style={{fontSize:5.5, fontWeight:700, color:isDark?"#C0A060":"#8B6820", marginBottom:6}}>
-                  {author.slice(0,22)}
-                </div>
-              </>
-            )}
-            <div style={{
-              position:"absolute", bottom:8, fontSize:4, color:C.textFaint,
-              letterSpacing:.3,
-            }}>
-              {format==="hollywood" ? "LETTER · WGA" : "A4 · EUROPEO"}
+              {/* Línea sutil de "página" */}
+              <div style={{position:"absolute", top:6, left:6, right:6, height:1, background:C.borderBright, opacity:.3}}/>
+              <div style={{
+                fontFamily:"'Courier Prime',monospace", fontWeight:700,
+                fontSize:7, color:isDark?"#D8CCAA":"#1A1510",
+                lineHeight:1.3, marginBottom:6, wordBreak:"break-word",
+              }}>
+                {(projectName||"GUION").toUpperCase().slice(0,28)}
+              </div>
+              {author && (
+                <>
+                  <div style={{fontSize:4.5, color:isDark?"#8A8070":"#8A7860", marginBottom:2}}>Escrito por</div>
+                  <div style={{fontSize:5.5, fontWeight:700, color:isDark?"#C0A060":"#8B6820", marginBottom:6}}>
+                    {author.slice(0,22)}
+                  </div>
+                </>
+              )}
+              <div style={{
+                position:"absolute", bottom:8, fontSize:4, color:C.textFaint,
+                letterSpacing:.3,
+              }}>
+                {format==="hollywood" ? "LETTER · WGA" : "A4 · EUROPEO"}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Formato */}
-        <div style={{marginBottom:18}}>
-          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
-            textTransform:"uppercase", marginBottom:10}}>Formato</div>
-          <div style={{display:"flex", flexDirection:"column", gap:8}}>
-            <div style={radioStyle(format==="hollywood")} onClick={()=>setFormat("hollywood")}>
-              <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="hollywood"?C.accent:C.borderBright}`,
-                background:format==="hollywood"?C.accent:"none", flexShrink:0, marginTop:1,
-                display:"flex", alignItems:"center", justifyContent:"center"}}>
-                {format==="hollywood" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
+          {/* Formato */}
+          <div style={{marginBottom:18}}>
+            <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+              textTransform:"uppercase", marginBottom:10}}>Formato</div>
+            <div style={{display:"flex", flexDirection:"column", gap:8}}>
+              <div style={radioStyle(format==="hollywood")} onClick={()=>setFormat("hollywood")}>
+                <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="hollywood"?C.accent:C.borderBright}`,
+                  background:format==="hollywood"?C.accent:"none", flexShrink:0, marginTop:1,
+                  display:"flex", alignItems:"center", justifyContent:"center"}}>
+                  {format==="hollywood" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
+                </div>
+                <div>
+                  <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Hollywood (estándar)</div>
+                  <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+                    Página Letter · márgenes WGA · Courier 12pt · personaje a 3.7"
+                  </div>
+                </div>
+              </div>
+              <div style={radioStyle(format==="european")} onClick={()=>setFormat("european")}>
+                <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="european"?C.accent:C.borderBright}`,
+                  background:format==="european"?C.accent:"none", flexShrink:0, marginTop:1,
+                  display:"flex", alignItems:"center", justifyContent:"center"}}>
+                  {format==="european" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
+                </div>
+                <div>
+                  <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Europeo / Español</div>
+                  <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
+                    Página A4 · márgenes europeos · etiquetas en español
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Autor */}
+          <div style={{marginBottom:16}}>
+            <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+              textTransform:"uppercase", marginBottom:8}}>Autor / Guionista</div>
+            <input
+              type="text" value={author} placeholder="Tu nombre"
+              onChange={e=>setAuthor(e.target.value)} style={inputStyle}
+              onFocus={e=>e.target.style.borderColor=C.accent}
+              onBlur={e=>e.target.style.borderColor=C.borderBright}
+            />
+          </div>
+
+          {/* Opciones */}
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+              textTransform:"uppercase", marginBottom:10}}>Opciones</div>
+            <label style={{display:"flex", alignItems:"center", gap:10, cursor:"pointer"}}>
+              <div onClick={()=>setSceneNumbers(v=>!v)} style={{
+                width:18, height:18, borderRadius:RADIUS.xs, border:`2px solid ${sceneNumbers?C.accent:C.borderBright}`,
+                background:sceneNumbers?C.accent:"none", flexShrink:0,
+                display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s",
+              }}>
+                {sceneNumbers && <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
+                  <polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>}
               </div>
               <div>
-                <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Hollywood (estándar)</div>
-                <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
-                  Página Letter · márgenes WGA · Courier 12pt · personaje a 3.7"
-                </div>
+                <div style={{fontSize:13, color:C.textPrimary}}>Numeración de escenas</div>
+                <div style={{fontSize:11, color:C.textMuted}}>Agrega número al inicio de cada encabezado</div>
               </div>
+            </label>
+          </div>
+
+          {/* Notas de dirección */}
+          <div style={{marginBottom:4}}>
+            <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
+              textTransform:"uppercase", marginBottom:4}}>Notas de dirección en el PDF</div>
+            <div style={{fontSize:11, color:C.textMuted, marginBottom:10}}>
+              El guion se exporta siempre limpio. Elegí qué categorías de notas querés incluir además del texto.
             </div>
-            <div style={radioStyle(format==="european")} onClick={()=>setFormat("european")}>
-              <div style={{width:16, height:16, borderRadius:"50%", border:`2px solid ${format==="european"?C.accent:C.borderBright}`,
-                background:format==="european"?C.accent:"none", flexShrink:0, marginTop:1,
-                display:"flex", alignItems:"center", justifyContent:"center"}}>
-                {format==="european" && <div style={{width:6,height:6,borderRadius:"50%",background:"#fff"}}/>}
-              </div>
-              <div>
-                <div style={{fontSize:13, fontWeight:600, color:C.textPrimary}}>Europeo / Español</div>
-                <div style={{fontSize:11, color:C.textMuted, marginTop:2}}>
-                  Página A4 · márgenes europeos · etiquetas en español
-                </div>
-              </div>
+            <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
+              {NOTE_CATEGORIES.map(cat => {
+                const on = noteCategories.includes(cat.id);
+                const c2 = noteCategoryColor(cat.id, C);
+                return (
+                  <button key={cat.id} onClick={()=>toggleNoteCategory(cat.id)} type="button"
+                    style={{padding:"6px 11px", borderRadius:RADIUS.pill, fontSize:12,
+                      background:on?`rgba(${hexToRgb(c2)},.16)`:"none",
+                      border:`1.5px solid ${on?c2:C.borderBright}`,
+                      color:on?c2:C.textMuted, cursor:"pointer", fontFamily:"inherit",
+                      display:"flex", alignItems:"center", gap:5, transition:"all .15s"}}>
+                    {cat.emoji} {cat.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* Autor */}
-        <div style={{marginBottom:16}}>
-          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
-            textTransform:"uppercase", marginBottom:8}}>Autor / Guionista</div>
-          <input
-            type="text" value={author} placeholder="Tu nombre"
-            onChange={e=>setAuthor(e.target.value)} style={inputStyle}
-            onFocus={e=>e.target.style.borderColor=C.accent}
-            onBlur={e=>e.target.style.borderColor=C.borderBright}
-          />
+        {/* Footer — fijo, siempre visible aunque el body scrollee */}
+        <div style={{padding:"14px 24px 24px", flexShrink:0, borderTop:`1px solid ${C.border}`}}>
+          <button onClick={generate} disabled={generating} style={{
+            width:"100%", padding:"13px", borderRadius:RADIUS.md, border:"none",
+            background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
+            cursor:generating?"wait":"pointer", opacity:generating?.7:1,
+            fontFamily:"'Courier Prime',monospace", letterSpacing:.5,
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+          }}>
+            <Icons.PDF style={{width:15,height:15}}/> {generating ? "Generando…" : "Generar PDF"}
+          </button>
         </div>
-
-        {/* Opciones */}
-        <div style={{marginBottom:24}}>
-          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
-            textTransform:"uppercase", marginBottom:10}}>Opciones</div>
-          <label style={{display:"flex", alignItems:"center", gap:10, cursor:"pointer"}}>
-            <div onClick={()=>setSceneNumbers(v=>!v)} style={{
-              width:18, height:18, borderRadius:RADIUS.xs, border:`2px solid ${sceneNumbers?C.accent:C.borderBright}`,
-              background:sceneNumbers?C.accent:"none", flexShrink:0,
-              display:"flex", alignItems:"center", justifyContent:"center", transition:"all .15s",
-            }}>
-              {sceneNumbers && <svg width="10" height="10" viewBox="0 0 12 12" fill="none">
-                <polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>}
-            </div>
-            <div>
-              <div style={{fontSize:13, color:C.textPrimary}}>Numeración de escenas</div>
-              <div style={{fontSize:11, color:C.textMuted}}>Agrega número al inicio de cada encabezado</div>
-            </div>
-          </label>
-        </div>
-
-        {/* Notas de dirección */}
-        <div style={{marginBottom:24}}>
-          <div style={{fontSize:11, fontWeight:600, color:C.textMuted, letterSpacing:.5,
-            textTransform:"uppercase", marginBottom:4}}>Notas de dirección en el PDF</div>
-          <div style={{fontSize:11, color:C.textMuted, marginBottom:10}}>
-            El guion se exporta siempre limpio. Elegí qué categorías de notas querés incluir además del texto.
-          </div>
-          <div style={{display:"flex", flexWrap:"wrap", gap:6}}>
-            {NOTE_CATEGORIES.map(cat => {
-              const on = noteCategories.includes(cat.id);
-              const c2 = noteCategoryColor(cat.id, C);
-              return (
-                <button key={cat.id} onClick={()=>toggleNoteCategory(cat.id)} type="button"
-                  style={{padding:"6px 11px", borderRadius:RADIUS.pill, fontSize:12,
-                    background:on?`rgba(${hexToRgb(c2)},.16)`:"none",
-                    border:`1.5px solid ${on?c2:C.borderBright}`,
-                    color:on?c2:C.textMuted, cursor:"pointer", fontFamily:"inherit",
-                    display:"flex", alignItems:"center", gap:5, transition:"all .15s"}}>
-                  {cat.emoji} {cat.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Botón */}
-        <button onClick={generate} disabled={generating} style={{
-          width:"100%", padding:"13px", borderRadius:RADIUS.md, border:"none",
-          background:C.accent, color:"#fff", fontSize:14, fontWeight:600,
-          cursor:generating?"wait":"pointer", opacity:generating?.7:1,
-          fontFamily:"'Courier Prime',monospace", letterSpacing:.5,
-          display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-        }}>
-          <Icons.PDF style={{width:15,height:15}}/> {generating ? "Generando…" : "Generar PDF"}
-        </button>
       </div>
     </div>
   );
