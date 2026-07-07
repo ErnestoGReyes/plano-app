@@ -595,7 +595,64 @@ export function StatsPanel({ stats }) {
         <p style={{fontSize:11, color:C.textMuted, marginTop:4}}>1 página ≈ 1 minuto en pantalla — la referencia que usa la industria para presupuestar</p>
       </div>
 
+      {duration && (
+        <DurationConfigControls
+          config={stats.durationConfig}
+          onChange={stats.onDurationConfigChange}
+        />
+      )}
       {duration && <SceneDurationBreakdown duration={duration}/>}
+    </div>
+  );
+}
+
+// Controles de velocidad — la duración estimada depende de qué tan rápido se
+// asume que "habla" el diálogo y qué tan rápido se "lee" la acción como tiempo
+// de pantalla. Ambos son ajustables por proyecto (persisten en localStorage,
+// ver App.jsx) porque varían según idioma, tono, o simplemente el gusto del
+// guionista — no hay un valor universal correcto.
+function DurationConfigControls({ config, onChange }) {
+  const C = useTheme();
+  if (!config || !onChange) return null;
+
+  const rowStyle = { display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, marginBottom:8 };
+  const labelStyle = { fontSize:11.5, color:C.textSec };
+  const inputStyle = {
+    width:64, background:C.bgApp, border:`1px solid ${C.borderBright}`,
+    borderRadius:RADIUS.xs, padding:"5px 8px", color:C.textPrimary, fontSize:12,
+    textAlign:"center", outline:"none", fontFamily:"inherit",
+  };
+
+  const clamp = v => Math.max(10, Math.min(400, Math.round(v) || 0));
+
+  return (
+    <div style={{marginTop:12, padding:"12px 14px", borderRadius:RADIUS.md,
+      background:C.bgCard, border:`1px solid ${C.border}`}}>
+      <p style={{fontSize:10, color:C.textMuted, fontWeight:700,
+        textTransform:"uppercase", letterSpacing:.5, marginBottom:10}}>
+        Velocidad estimada (palabras/min)
+      </p>
+      <div style={rowStyle}>
+        <span style={labelStyle}>Diálogo</span>
+        <input type="number" min={10} max={400} step={5}
+          value={config.wordsPerMinuteDialogue}
+          onChange={e => onChange({ wordsPerMinuteDialogue: clamp(e.target.value) })}
+          onFocus={e=>e.target.style.borderColor=C.accent}
+          onBlur={e=>e.target.style.borderColor=C.borderBright}
+          style={inputStyle}/>
+      </div>
+      <div style={{...rowStyle, marginBottom:2}}>
+        <span style={labelStyle}>Acción</span>
+        <input type="number" min={10} max={400} step={5}
+          value={config.wordsPerMinuteAction}
+          onChange={e => onChange({ wordsPerMinuteAction: clamp(e.target.value) })}
+          onFocus={e=>e.target.style.borderColor=C.accent}
+          onBlur={e=>e.target.style.borderColor=C.borderBright}
+          style={inputStyle}/>
+      </div>
+      <p style={{fontSize:10, color:C.textFaint, marginTop:8}}>
+        Se guarda por guion. Bajalo si tu diálogo es pausado, subilo si es rápido.
+      </p>
     </div>
   );
 }

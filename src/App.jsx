@@ -4,7 +4,7 @@ import { useTheme, ThemeProvider } from "./contexts/ThemeContext";
 import { useThemePreference } from "./hooks/useThemePreference";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
-import { uid, extractCharacters, extractScenes, countWords, estimatePages, estimateDuration, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
+import { uid, extractCharacters, extractScenes, countWords, estimatePages, estimateDuration, DEFAULT_DURATION_CONFIG, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
 import { exportToFountain } from "./utils/fountain";
 import { InjectStyles } from "./styles/globalStyles";
 import { useUndoable } from "./hooks/useUndoable";
@@ -183,6 +183,32 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
   const [loadError, setLoadError] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const project = projects.find(p=>p.id===selectedId) || projects[0];
+
+  // ── Config de estimación de duración (por proyecto) ─────────────────────────
+  // wordsPerMinuteDialogue / wordsPerMinuteAction son ajustables — la promesa
+  // era justamente esa: la velocidad de habla varía según el proyecto/idioma/
+  // tono, así que no puede quedar hardcodeada. Se guarda en localStorage por
+  // project.id (no hace falta migrar la tabla de Supabase para esto: es una
+  // preferencia liviana, no datos del guion en sí).
+  const [durationConfig, setDurationConfig] = useState(DEFAULT_DURATION_CONFIG);
+  useEffect(() => {
+    if (!project?.id) { setDurationConfig(DEFAULT_DURATION_CONFIG); return; }
+    try {
+      const raw = localStorage.getItem(`plano-duration-config:${project.id}`);
+      setDurationConfig(raw ? { ...DEFAULT_DURATION_CONFIG, ...JSON.parse(raw) } : DEFAULT_DURATION_CONFIG);
+    } catch { setDurationConfig(DEFAULT_DURATION_CONFIG); }
+  }, [project?.id]);
+
+  const updateDurationConfig = useCallback((patch) => {
+    setDurationConfig(prev => {
+      const next = { ...prev, ...patch };
+      if (project?.id) {
+        try { localStorage.setItem(`plano-duration-config:${project.id}`, JSON.stringify(next)); } catch {}
+      }
+      return next;
+    });
+  }, [project?.id]);
+
 
   // Cargar guiones del usuario desde Supabase
   const loadProjects = useCallback(async () => {
@@ -427,11 +453,11 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
   // Duración estimada por contenido (Fase 1/2) — desglose diálogo/acción/pausas
   // por escena, separado del paginado tradicional (stats.pages, "1 pág ≈ 1 min").
   // Se recalcula solo cuando cambian los bloques, no en cada render del panel.
-  const duration = useMemo(() => estimateDuration(blocks), [blocks]);
+  const duration = useMemo(() => estimateDuration(blocks, durationConfig), [blocks, durationConfig]);
   const stats = {
     words, pages, scenes:scenes.length, characters:Object.keys(characters).length,
     dialogues:blocks.filter(b=>b.type===T.DIALOGUE).length, blocks:blocks.length,
-    duration,
+    duration, durationConfig, onDurationConfigChange: updateDurationConfig,
   };
 
   // ── Búsqueda ───────────────────────────────────────────────────────────────
