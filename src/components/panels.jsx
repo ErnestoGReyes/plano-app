@@ -3,7 +3,7 @@ import { RADIUS, SHADOW, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
-import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor, normalizeNote, NOTE_CATEGORIES, noteCategoryMeta, noteCategoryColor } from "../utils/screenplay";
+import { buildSceneGroups, parseSceneHeading, charactersInScene, typeLabel, typeColor, normalizeNote, NOTE_CATEGORIES, noteCategoryMeta, noteCategoryColor, formatDuration } from "../utils/screenplay";
 
 export function RightPanel({ tab, projects, selectedId, onSelectProject, onNewProject, onDeleteProject,
   onRenameProject, onReorderProjects, onOpenTrash,
@@ -574,6 +574,7 @@ export function StatsPanel({ stats }) {
     ["Diálogos", stats.dialogues],
     ["Bloques", stats.blocks],
   ];
+  const duration = stats.duration; // { scenes:[...], total:{...}, config } — ver estimateDuration()
   return (
     <div>
       {items.map(([label,val]) => (
@@ -587,12 +588,96 @@ export function StatsPanel({ stats }) {
       <div style={{marginTop:12, padding:"14px 16px", borderRadius:RADIUS.md,
         background:`rgba(${hexToRgb(C.accent)},.08)`, border:`1px solid rgba(${hexToRgb(C.accent)},.25)`}}>
         <p style={{fontSize:10, color:C.accent, marginBottom:4, fontWeight:700,
-          textTransform:"uppercase", letterSpacing:.5}}>Duración estimada</p>
+          textTransform:"uppercase", letterSpacing:.5}}>Duración por paginado</p>
         <p style={{fontSize:28, color:C.textPrimary, fontWeight:800, lineHeight:1}}>
           ~{stats.pages}<span style={{fontSize:14, fontWeight:400, marginLeft:4}}>min</span>
         </p>
-        <p style={{fontSize:11, color:C.textMuted, marginTop:4}}>1 página ≈ 1 minuto en pantalla</p>
+        <p style={{fontSize:11, color:C.textMuted, marginTop:4}}>1 página ≈ 1 minuto en pantalla — la referencia que usa la industria para presupuestar</p>
       </div>
+
+      {duration && <SceneDurationBreakdown duration={duration}/>}
+    </div>
+  );
+}
+
+// Desglose de duración basado en CONTENIDO real (diálogo/acción/pausas), no en
+// paginado. Es un punto de partida editable: la pausa manual de cada bloque
+// (ver editor.jsx) es la forma de ajustar lo que el algoritmo no puede inferir
+// del texto solo.
+function SceneDurationBreakdown({ duration }) {
+  const C = useTheme();
+  const { scenes, total } = duration;
+  const legend = [
+    { key:"dialogueSeconds", label:"Diálogo", color:C.accent },
+    { key:"actionSeconds",   label:"Acción",  color:C.textSec },
+    { key:"pauseSeconds",    label:"Pausas",  color:C.accentWarm },
+  ];
+
+  return (
+    <div style={{marginTop:12, padding:"14px 16px", borderRadius:RADIUS.md,
+      background:C.bgCard, border:`1px solid ${C.border}`}}>
+      <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:2}}>
+        <p style={{fontSize:10, color:C.textMuted, fontWeight:700,
+          textTransform:"uppercase", letterSpacing:.5}}>Duración por contenido</p>
+        <span style={{fontSize:20, color:C.textPrimary, fontWeight:800}}>
+          {formatDuration(total.totalSeconds)}
+        </span>
+      </div>
+      <p style={{fontSize:11, color:C.textMuted, marginBottom:12}}>
+        Estimado según lo que se lee en cada bloque — un punto de partida, no una medición exacta.
+      </p>
+
+      {/* Leyenda de colores */}
+      <div style={{display:"flex", gap:12, marginBottom:12, flexWrap:"wrap"}}>
+        {legend.map(l => (
+          <div key={l.key} style={{display:"flex", alignItems:"center", gap:5}}>
+            <div style={{width:8, height:8, borderRadius:2, background:l.color}}/>
+            <span style={{fontSize:10.5, color:C.textMuted}}>{l.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {scenes.length === 0 ? (
+        <p style={{fontSize:12, color:C.textFaint, fontStyle:"italic"}}>
+          Agregá encabezados de escena para ver el desglose por escena.
+        </p>
+      ) : (
+        <div style={{display:"flex", flexDirection:"column", gap:8}}>
+          {scenes.map((s, i) => (
+            <div key={s.id}>
+              <div style={{display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:3}}>
+                <span style={{fontSize:11, color:C.textSec, overflow:"hidden", textOverflow:"ellipsis",
+                  whiteSpace:"nowrap", maxWidth:"70%"}}>
+                  {i+1}. {s.heading}
+                </span>
+                <span style={{fontSize:10.5, color:C.textMuted, fontVariantNumeric:"tabular-nums"}}>
+                  {formatDuration(s.totalSeconds)}
+                </span>
+              </div>
+              <DurationBar scene={s} legend={legend}/>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Barra apilada proporcional a diálogo/acción/pausas de una escena. Si la
+// escena todavía no tiene texto (totalSeconds===0), muestra una línea vacía
+// en vez de nada, para que la lista no "salte" de tamaño.
+function DurationBar({ scene, legend }) {
+  const C = useTheme();
+  const total = scene.totalSeconds || 0;
+  return (
+    <div style={{display:"flex", height:6, borderRadius:3, overflow:"hidden",
+      background:C.bgActive, width:"100%"}}>
+      {total > 0 ? legend.map(l => {
+        const pct = (scene[l.key] / total) * 100;
+        return pct > 0 ? (
+          <div key={l.key} style={{width:`${pct}%`, background:l.color, height:"100%"}}/>
+        ) : null;
+      }) : null}
     </div>
   );
 }

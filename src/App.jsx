@@ -4,7 +4,7 @@ import { useTheme, ThemeProvider } from "./contexts/ThemeContext";
 import { useThemePreference } from "./hooks/useThemePreference";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
-import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
+import { uid, extractCharacters, extractScenes, countWords, estimatePages, estimateDuration, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
 import { exportToFountain } from "./utils/fountain";
 import { InjectStyles } from "./styles/globalStyles";
 import { useUndoable } from "./hooks/useUndoable";
@@ -424,9 +424,14 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
   const characterColors = useMemo(() => {
     const m = {}; Object.entries(characters).forEach(([n,i])=>{ m[n]=i.color; }); return m;
   }, [characters]);
+  // Duración estimada por contenido (Fase 1/2) — desglose diálogo/acción/pausas
+  // por escena, separado del paginado tradicional (stats.pages, "1 pág ≈ 1 min").
+  // Se recalcula solo cuando cambian los bloques, no en cada render del panel.
+  const duration = useMemo(() => estimateDuration(blocks), [blocks]);
   const stats = {
     words, pages, scenes:scenes.length, characters:Object.keys(characters).length,
-    dialogues:blocks.filter(b=>b.type===T.DIALOGUE).length, blocks:blocks.length
+    dialogues:blocks.filter(b=>b.type===T.DIALOGUE).length, blocks:blocks.length,
+    duration,
   };
 
   // ── Búsqueda ───────────────────────────────────────────────────────────────
