@@ -466,6 +466,22 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
     }));
   }, [blocks, updateBlocks]);
 
+  // Pausa manual (Fase 2 de duración estimada): segundos que el usuario marca
+  // a mano sobre un bloque puntual (un plano contemplativo, un silencio) que
+  // el cálculo automático de estimateDuration() no puede inferir del texto.
+  // `seconds` en 0/null la borra (vuelve a no sumar nada extra en ese bloque).
+  const updatePause = useCallback((index, seconds) => {
+    updateBlocks(blocks.map((b,i) => {
+      if (i!==index) return b;
+      if (!seconds || seconds <= 0) {
+        const { pauseSeconds, ...rest } = b;
+        return rest;
+      }
+      return { ...b, pauseSeconds: seconds };
+    }));
+  }, [blocks, updateBlocks]);
+
+
   const handleKeyDown = useCallback((e, index) => {
     const block = blocks[index];
     if (e.key==="Enter" && !e.shiftKey) {
@@ -753,6 +769,7 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
                 isActive={index===activeIndex} characterColors={characterColors}
                 onUpdate={updateBlock} onFocus={setActiveIndex}
                 onNoteChange={updateNote}
+                onPauseChange={updatePause}
                 onKeyDown={handleKeyDown} isMobile={isMobile}
                 charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
                 onAcceptSuggestion={updateBlock}
@@ -770,6 +787,7 @@ export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) 
             isActive={index===activeIndex} characterColors={characterColors}
             onUpdate={updateBlock} onFocus={setActiveIndex}
             onNoteChange={updateNote}
+            onPauseChange={updatePause}
             onKeyDown={handleKeyDown} isMobile={isMobile}
             charSuggestions={index===activeIndex ? charSuggestions : EMPTY_SUGGESTIONS}
             onAcceptSuggestion={updateBlock}

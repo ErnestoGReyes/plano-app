@@ -95,12 +95,14 @@ export function Toolbar({ activeType, onTypeChange, onExport, onExportFountain, 
 
 function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, onFocus,
   onKeyDown, inputRef, charSuggestions, onAcceptSuggestion, isMobile,
-  onAddBlockAfter, onDeleteBlock, onNoteChange }) {
+  onAddBlockAfter, onDeleteBlock, onNoteChange, onPauseChange }) {
   const C = useTheme();
   const color = characterColors[block.text?.trim()?.toUpperCase()] || C.green;
   const [showSug, setShowSug] = useState(false);
   const [showActions, setShowActions] = useState(false);
   const [noteEditing, setNoteEditing] = useState(false);
+  const [pauseEditing, setPauseEditing] = useState(false);
+  const pauseSeconds = block.pauseSeconds || 0;
 
   const base = {
     width:"100%", border:"none", outline:"none", background:"transparent",
@@ -242,10 +244,63 @@ function ScriptBlockImpl({ block, index, isActive, characterColors, onUpdate, on
         </div>
       ) : !hasNoteText && isActive ? (
         <button onClick={e=>{e.stopPropagation();setNoteEditing(true);}} style={{
-          display:"inline-flex", alignItems:"center", gap:4, margin:"2px 0 6px",
+          display:"inline-flex", alignItems:"center", gap:4, margin:"2px 6px 6px 0",
           padding:"3px 9px", borderRadius:RADIUS.pill, border:`1px dashed ${C.border}`,
           background:"none", color:C.textFaint, fontSize:10.5, cursor:"pointer", fontFamily:"inherit"}}>
           📌 + nota de dirección
+        </button>
+      ) : null}
+
+      {/* Pausa manual — complemento de estimateDuration() (utils/screenplay.js):
+          tiempo extra que el cálculo automático no puede inferir del texto,
+          para planos contemplativos, silencios, etc. Campo estructurado
+          (block.pauseSeconds), no texto libre, para que sea editable desde acá
+          sin depender de que el usuario recuerde una sintaxis. */}
+      {pauseEditing ? (
+        <div onClick={e=>e.stopPropagation()} style={{
+          display:"flex", alignItems:"center", flexWrap:"wrap", gap:8, margin:"2px 0 8px",
+          padding:"6px 10px", borderRadius:RADIUS.sm,
+          background:C.bgCard, border:`1px solid ${C.borderBright}`}}>
+          <span style={{fontSize:13}}>⏱</span>
+          <input type="number" min={0} step={1} autoFocus
+            value={pauseSeconds || ""}
+            onChange={e=>onPauseChange(index, Math.max(0, Math.round(Number(e.target.value)||0)))}
+            placeholder="0"
+            style={{width:48, background:"transparent", border:"none", outline:"none",
+              borderBottom:`1px solid ${C.border}`, color:C.textPrimary, fontSize:12.5,
+              fontFamily:"inherit", textAlign:"center"}}/>
+          <span style={{fontSize:11, color:C.textMuted}}>seg. de pausa</span>
+          <div style={{display:"flex", gap:4, marginLeft:"auto"}}>
+            {[5,10,30].map(s => (
+              <button key={s} onClick={()=>onPauseChange(index, s)}
+                style={{padding:"2px 7px", borderRadius:RADIUS.pill, fontSize:10.5,
+                  background:"none", border:`1px solid ${C.border}`, color:C.textMuted,
+                  cursor:"pointer", fontFamily:"inherit"}}>{s}s</button>
+            ))}
+            {pauseSeconds > 0 && (
+              <button onClick={()=>{onPauseChange(index, 0); setPauseEditing(false);}}
+                style={{background:"none", border:"none", color:C.red, fontSize:10.5,
+                  cursor:"pointer", fontFamily:"inherit"}}>Quitar</button>
+            )}
+            <button onClick={()=>setPauseEditing(false)}
+              style={{background:"none", border:"none", color:C.accent, fontSize:10.5,
+                fontWeight:600, cursor:"pointer", fontFamily:"inherit"}}>Listo</button>
+          </div>
+        </div>
+      ) : pauseSeconds > 0 ? (
+        <div onClick={e=>{e.stopPropagation();setPauseEditing(true);}} title="Click para editar la pausa" style={{
+          display:"inline-flex", alignItems:"center", gap:5, margin:"2px 6px 8px 0",
+          padding:"3px 9px", borderRadius:RADIUS.pill, cursor:"pointer",
+          background:`rgba(${hexToRgb(C.accentWarm)},.12)`, border:`1px solid ${C.accentWarm}80`,
+          fontSize:10.5, color:C.accentWarm, fontFamily:"inherit"}}>
+          ⏱ {pauseSeconds}s de pausa
+        </div>
+      ) : isActive ? (
+        <button onClick={e=>{e.stopPropagation();setPauseEditing(true);}} style={{
+          display:"inline-flex", alignItems:"center", gap:4, margin:"2px 6px 8px 0",
+          padding:"3px 9px", borderRadius:RADIUS.pill, border:`1px dashed ${C.border}`,
+          background:"none", color:C.textFaint, fontSize:10.5, cursor:"pointer", fontFamily:"inherit"}}>
+          ⏱ + pausa
         </button>
       ) : null}
 
