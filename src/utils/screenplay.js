@@ -148,3 +148,102 @@ export function normalizeNote(note) {
   if (typeof note === "string") return { text:note, category:"general", onScreen:true };
   return { text:note.text||"", category:note.category||"general", onScreen: note.onScreen !== false };
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESTIMACIÓN DE DURACIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+// A propósito, separado de estimatePages(): el paginado tradicional ("1 página
+// ≈ 1 minuto") sigue siendo la referencia que usa la industria para presupuestar
+// y programar rodajes. Esto es otro cálculo, basado en CONTENIDO real de cada
+// escena (cuánto se habla, cuánta acción hay, cuántas pausas marcó el usuario) —
+// pensado como un punto de partida EDITABLE, nunca como un número "verdad
+// absoluta": ningún algoritmo puede saber cuánto dura en pantalla "Sofía entra
+// lentamente" sin ver cómo se filma.
+
+export const DEFAULT_DURATION_CONFIG = {
+  wordsPerMinuteDialogue: 150, // qué tan rápido "habla" el diálogo — ajustable por proyecto/idioma
+  wordsPerMinuteAction: 100,   // qué tan rápido se "lee" la acción como tiempo de pantalla
+};
+
+// Segundos de pausa manual en un bloque. Todavía no hay UI para cargar esto
+// (eso es Fase 2) pero el campo ya existe en la estructura de datos —
+// b.pauseSeconds, numérico — para no tener que romper nada cuando se agregue
+// el input. Cualquier tipo de bloque puede tenerlo (un plano contemplativo
+// suele marcarse sobre una ACTION, pero no lo restringimos).
+function blockPauseSeconds(block) {
+  const s = block?.pauseSeconds;
+  return typeof s === "number" && s > 0 ? s : 0;
+}
+
+function wordsIn(block) {
+  return block.text?.trim().split(/\s+/).filter(Boolean).length || 0;
+}
+
+// Suma tiempo de un conjunto de bloques (sin agrupar por escena) según su tipo:
+// diálogo y acotación cuentan como habla; acción cuenta como tiempo visual.
+// Encabezado de escena y transición ("CORTE A:") no suman tiempo propio — son
+// instrucciones de montaje, no algo que ocurra en pantalla — pero sí pueden
+// traer una pausa manual adjunta.
+function estimateBlocksDuration(blocks, config) {
+  let dialogueSeconds = 0, actionSeconds = 0, pauseSeconds = 0;
+  blocks.forEach(b => {
+    pauseSeconds += blockPauseSeconds(b);
+    const words = wordsIn(b);
+    if (words === 0) return;
+    if (b.type === T.DIALOGUE || b.type === T.PAREN) {
+      dialogueSeconds += (words / config.wordsPerMinuteDialogue) * 60;
+    } else if (b.type === T.ACTION) {
+      actionSeconds += (words / config.wordsPerMinuteAction) * 60;
+    }
+  });
+  return { dialogueSeconds, actionSeconds, pauseSeconds };
+}
+
+// Desglose de duración por escena + total del guion. `config` es opcional y
+// se mergea sobre DEFAULT_DURATION_CONFIG, así el caller solo pisa lo que
+// quiere ajustar (ej. solo wordsPerMinuteDialogue si el proyecto es de diálogo
+// muy rápido).
+export function estimateDuration(blocks, config = {}) {
+  const cfg = { ...DEFAULT_DURATION_CONFIG, ...config };
+  const { preamble, groups } = buildSceneGroups(blocks);
+
+  const scenes = groups.map(g => {
+    const t = estimateBlocksDuration(g.content, cfg);
+    return {
+      id: g.id,
+      heading: g.heading.text || "Sin título",
+      dialogueSeconds: t.dialogueSeconds,
+      actionSeconds: t.actionSeconds,
+      pauseSeconds: t.pauseSeconds,
+      totalSeconds: t.dialogueSeconds + t.actionSeconds + t.pauseSeconds,
+    };
+  });
+
+  // Bloques sueltos antes de la primera escena (si los hay) también suman al
+  // total, aunque no aparezcan como una "tarjeta" de escena en el desglose.
+  const preambleTiming = estimateBlocksDuration(preamble, cfg);
+  const base = {
+    dialogueSeconds: preambleTiming.dialogueSeconds,
+    actionSeconds: preambleTiming.actionSeconds,
+    pauseSeconds: preambleTiming.pauseSeconds,
+    totalSeconds: preambleTiming.dialogueSeconds + preambleTiming.actionSeconds + preambleTiming.pauseSeconds,
+  };
+
+  const total = scenes.reduce((acc, s) => ({
+    dialogueSeconds: acc.dialogueSeconds + s.dialogueSeconds,
+    actionSeconds: acc.actionSeconds + s.actionSeconds,
+    pauseSeconds: acc.pauseSeconds + s.pauseSeconds,
+    totalSeconds: acc.totalSeconds + s.totalSeconds,
+  }), base);
+
+  return { scenes, total, config: cfg };
+}
+
+// Formatea segundos como "1:23" / "12:04" — para no repetir el padding en
+// cada componente que quiera mostrar esto (ej. el tab Stats).
+export function formatDuration(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const m = Math.floor(s / 60);
+  const rem = s % 60;
+  return `${m}:${String(rem).padStart(2,"0")}`;
+}
