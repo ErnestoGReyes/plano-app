@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, Component } from "react";
-import { T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb } from "./design/tokens";
+import { T, DARK, LIGHT, FONT_DISPLAY, RADIUS, hexToRgb, getPalette } from "./design/tokens";
 import { useTheme, ThemeProvider } from "./contexts/ThemeContext";
+import { useThemePreference } from "./hooks/useThemePreference";
 import { Icons } from "./lib/icons";
 import { supabase } from "./lib/supabase";
 import { uid, extractCharacters, extractScenes, countWords, estimatePages, nextType, buildSceneGroups, flattenSceneGroups, normalizeNote } from "./utils/screenplay";
@@ -16,6 +17,7 @@ import { LandingPage, AuthScreen, WelcomeScreen } from "./components/landing";
 import { NavSidebar, MobileBottomNav, MobileEditorHeader } from "./components/nav";
 import { RightPanel, MobilePanel, CorkboardView, PanelContent } from "./components/panels";
 import { Toolbar, ScriptBlock } from "./components/editor";
+import { ThemeSelectorModal } from "./components/ThemeSelector";
 
 // Referencia estable — evita pasar un array [] nuevo en cada render a los bloques
 // inactivos, lo que rompería la memoización de ScriptBlock (ver editor.jsx).
@@ -103,18 +105,15 @@ export class ErrorBoundary extends Component {
 export function AppInner() {
   const session = useAuth();
 
-  // ── Tema día/noche ─────────────────────────────────────────────────────────
-  const [isDark, setIsDark] = useState(() => {
-    try { return localStorage.getItem("plano-theme") !== "light"; } catch { return true; }
-  });
-  // C ya no se muta acá: se deriva directamente de isDark para lo que AppInner
-  // necesita antes de que exista el ThemeProvider (ver más abajo), y el resto
-  // del árbol lo consume vía useTheme() dentro del Provider.
-  const C = isDark ? DARK : LIGHT;
-  useEffect(() => {
-    try { localStorage.setItem("plano-theme", isDark ? "dark" : "light"); } catch {}
-  }, [isDark]);
-  const toggleTheme = useCallback(() => setIsDark(v => !v), []);
+  // ── Tema: paleta elegida (themeId) + modo día/noche (isDark) ────────────────
+  // Antes esto era un simple useState + localStorage acá mismo. Ahora vive en
+  // useThemePreference: mismo comportamiento offline/sin sesión (localStorage),
+  // más sincronización con Supabase una vez que hay sesión (ver hooks/useThemePreference.js).
+  const { isDark, themeId, setThemeId, toggleTheme } = useThemePreference(session);
+  // C ya no se muta acá: se deriva directamente de themeId+isDark para lo que
+  // AppInner necesita antes de que exista el ThemeProvider (ver más abajo), y
+  // el resto del árbol lo consume vía useTheme() dentro del Provider.
+  const C = getPalette(themeId, isDark);
 
   // ── Sin sesión → landing o login ───────────────────────────────────────────
   // (declarado ANTES de cualquier return condicional, para no violar las reglas de los hooks)
@@ -140,7 +139,7 @@ export function AppInner() {
   if (!session) {
     if (showLanding) {
       return (
-        <ThemeProvider isDark={isDark}>
+        <ThemeProvider isDark={isDark} themeId={themeId}>
           <InjectStyles/>
           <LandingPage isDark={isDark} onToggleTheme={toggleTheme}
             onEnter={()=>{
@@ -151,7 +150,7 @@ export function AppInner() {
       );
     }
     return (
-      <ThemeProvider isDark={isDark}>
+      <ThemeProvider isDark={isDark} themeId={themeId}>
         <InjectStyles/>
         <AuthScreen isDark={isDark} onToggleTheme={toggleTheme}/>
       </ThemeProvider>
@@ -160,8 +159,9 @@ export function AppInner() {
 
   // ── Con sesión → app completa ──────────────────────────────────────────────
   return (
-    <ThemeProvider isDark={isDark}>
-      <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}/>
+    <ThemeProvider isDark={isDark} themeId={themeId}>
+      <PlanoApp session={session} isDark={isDark} toggleTheme={toggleTheme}
+        themeId={themeId} setThemeId={setThemeId}/>
     </ThemeProvider>
   );
 }
@@ -174,8 +174,9 @@ export default function App() {
   );
 }
 
-export function PlanoApp({ session, isDark, toggleTheme }) {
+export function PlanoApp({ session, isDark, toggleTheme, themeId, setThemeId }) {
   const C = useTheme();
+  const [showThemeSelector, setShowThemeSelector] = useState(false);
   // ── Proyectos ──────────────────────────────────────────────────────────────
   const [projects, setProjects] = useState([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
@@ -835,6 +836,16 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
         <OnboardingModal isDark={isDark} onClose={closeOnboarding}/>
       )}
 
+      {/* Selector de tema */}
+      <ThemeSelectorModal
+        open={showThemeSelector}
+        onClose={()=>setShowThemeSelector(false)}
+        themeId={themeId}
+        onSelectTheme={setThemeId}
+        isDark={isDark}
+        onToggleMode={toggleTheme}
+      />
+
       {/* Modal de exportación PDF */}
       {showExportModal && (
         <ExportPDFModal blocks={blocks} projectName={project?.name||"Guion"}
@@ -876,7 +887,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
           <>
             {/* Left icon nav */}
             {!focusMode && (
-              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} saveError={saveError} isDark={isDark} onToggleTheme={toggleTheme} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
+              <NavSidebar tab={navTab} onTab={t=>{setNavTab(t);}} saving={saving} saveError={saveError} isDark={isDark} onToggleTheme={toggleTheme} onOpenThemeSelector={()=>setShowThemeSelector(true)} onSignOut={signOut} userEmail={session.user.email} onHelp={()=>setShowHelpModal(true)} onOnboarding={()=>setShowOnboarding(true)}/>
             )}
 
             {/* Panel secundario izquierdo — guiones/personajes/notas/stats/búsqueda */}
@@ -1054,7 +1065,7 @@ export function PlanoApp({ session, isDark, toggleTheme }) {
                 if (t==="editor") {
                   setTimeout(()=>inputRefs.current[activeIndex]?.focus(), 100);
                 }
-              }} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onHelp={()=>setShowHelpModal(true)}/>
+              }} saving={saving} isDark={isDark} onToggleTheme={toggleTheme} onOpenThemeSelector={()=>setShowThemeSelector(true)} onHelp={()=>setShowHelpModal(true)}/>
             )}
           </div>
         )}

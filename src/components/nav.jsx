@@ -3,8 +3,9 @@ import { T, RADIUS, hexToRgb } from "../design/tokens";
 import { useTheme } from "../contexts/ThemeContext";
 import { Icons } from "../lib/icons";
 import { Btn } from "./common";
+import { PaletteIcon } from "./ThemeSelector";
 
-export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onSignOut, userEmail, onHelp, onOnboarding }) {
+export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleTheme, onOpenThemeSelector, onSignOut, userEmail, onHelp, onOnboarding }) {
   const C = useTheme();
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
@@ -86,7 +87,17 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
         ✦
       </button>
 
-      {/* Theme toggle */}
+      {/* Selector de paleta de tema */}
+      <button onClick={onOpenThemeSelector} title="Elegir tema"
+        style={{padding:"8px", borderRadius:RADIUS.sm, border:"none", background:"none",
+          color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
+          display:"flex", alignItems:"center", justifyContent:"center", width:"100%"}}
+        onMouseEnter={e=>{e.currentTarget.style.color=C.textSec;e.currentTarget.style.background=C.bgCard}}
+        onMouseLeave={e=>{e.currentTarget.style.color=C.textMuted;e.currentTarget.style.background="none"}}>
+        <PaletteIcon/>
+      </button>
+
+      {/* Theme toggle (día/noche) */}
       <button onClick={onToggleTheme} title={isDark ? "Modo día" : "Modo noche"}
         style={{padding:"8px", borderRadius:RADIUS.sm, border:"none", background:"none",
           color:C.textMuted, cursor:"pointer", transition:"color .15s, background .15s",
@@ -128,7 +139,7 @@ export function NavSidebar({ tab, onTab, saving, saveError, isDark, onToggleThem
   );
 }
 
-export function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onHelp }) {
+export function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onOpenThemeSelector, onHelp }) {
   const C = useTheme();
   const items = [
     {id:"editor",    Icon:Icons.Editor,     label:"Editor"},
@@ -156,9 +167,9 @@ export function MobileBottomNav({ tab, onTab, saving, isDark, onToggleTheme, onH
         <Icons.Help style={{width:20,height:20}}/>
         <span style={{fontSize:8.5}}>Guía</span>
       </button>
-      <button onClick={onToggleTheme} className="mobile-nav-btn" title={isDark?"Modo día":"Modo noche"}>
+      <button onClick={onOpenThemeSelector} className="mobile-nav-btn" title="Elegir tema">
         {isDark ? <Icons.Sun style={{width:20,height:20}}/> : <Icons.Moon style={{width:20,height:20}}/>}
-        <span style={{fontSize:8.5}}>{isDark?"Día":"Noche"}</span>
+        <span style={{fontSize:8.5}}>Tema</span>
       </button>
     </div>
   );
